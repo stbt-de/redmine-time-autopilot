@@ -1,0 +1,88 @@
+<%# Zeit buchen: Ticket suchen, Dauer wählen, buchen (time_autopilot_blocks.js) %>
+<% quick = RedmineTimeAutopilot::QuickTimeEntry.new(user) %>
+<% recent = quick.recent_issues %>
+<%# Auch auf der Seite „Zeiten“ (rechts, „Selbst nachtragen“): title/intro %>
+<h3>
+  <%= local_assigns[:title] || l('my.blocks.quick_time_entry') %>
+  <span class="ta-today">
+    <%= l(:label_time_autopilot_today) %>
+    <strong data-ta-today><%= time_autopilot_hours(quick.today_hours) %></strong>
+  </span>
+</h3>
+
+<% if local_assigns[:intro] %><p class="ta-quick-time-intro"><%= local_assigns[:intro] %></p><% end %>
+<% if quick.allowed? %>
+  <div class="ta-quick-time"
+       data-urls="<%= { issues: time_autopilot_time_entry_issues_path, activities: time_autopilot_time_entry_activities_path,
+                        create: time_autopilot_time_entries_path, destroy: time_autopilot_time_entry_path(id: 0) }.to_json %>"
+       data-i18n="<%= { no_match: l(:label_time_autopilot_no_match), choose_issue: l(:error_time_autopilot_choose_issue),
+                        undo: l(:button_time_autopilot_undo), undone: l(:notice_time_autopilot_undone),
+                        open_form: l(:label_time_autopilot_open_form), failed: l(:error_time_autopilot_failed) }.to_json %>">
+    <%= form_tag(time_autopilot_time_entries_path, class: 'ta-quick-time-form', autocomplete: 'off') do %>
+      <%= hidden_field_tag :issue_id, '', id: "#{block}-issue-id" %>
+
+      <div class="ta-field ta-issue">
+        <label for="<%= block %>-issue"><%= l(:field_issue) %></label>
+        <div class="ta-combobox">
+          <input type="search" id="<%= block %>-issue" class="ta-issue-search"
+                 placeholder="<%= l(:label_time_autopilot_search_placeholder) %>"
+                 role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="<%= block %>-issue-options">
+          <button type="button" class="ta-issue-clear icon-only" hidden
+                  aria-label="<%= l(:button_time_autopilot_clear) %>" title="<%= l(:button_time_autopilot_clear) %>">×</button>
+          <ul id="<%= block %>-issue-options" class="ta-issue-options" role="listbox" hidden></ul>
+        </div>
+      </div>
+
+      <fieldset class="ta-field ta-duration">
+        <legend><%= l(:field_hours) %></legend>
+        <div class="ta-duration-choices">
+          <% [0.25, 0.5, 1, 2].each do |hours| %>
+            <button type="button" class="ta-duration-choice" data-hours="<%= format_hours(hours) %>"
+                    aria-pressed="<%= hours == 1 %>"><%= format_hours(hours) %></button>
+          <% end %>
+          <%= text_field_tag :hours, format_hours(1), id: "#{block}-hours", class: 'ta-hours',
+                             size: 5, inputmode: 'decimal', 'aria-label': l(:field_hours), required: true %>
+        </div>
+      </fieldset>
+
+      <div class="ta-field">
+        <label for="<%= block %>-spent-on"><%= l(:field_spent_on) %></label>
+        <%= date_field_tag :spent_on, user.today, id: "#{block}-spent-on", max: user.today + 1, required: true %>
+      </div>
+
+      <div class="ta-field">
+        <label for="<%= block %>-activity"><%= l(:field_activity) %></label>
+        <%= select_tag :activity_id,
+                       options_from_collection_for_select(quick.default_activities, :id, :name,
+                                                          quick.default_activities.detect(&:is_default?)&.id),
+                       id: "#{block}-activity", class: 'ta-activity' %>
+      </div>
+
+      <div class="ta-field ta-comment">
+        <label for="<%= block %>-comments"><%= l(:field_comments) %></label>
+        <%= text_field_tag :comments, '', id: "#{block}-comments", maxlength: 1024 %>
+      </div>
+
+      <div class="ta-field ta-submit">
+        <%= submit_tag l(:button_time_autopilot_log), name: nil, class: 'button-positive' %>
+      </div>
+    <% end %>
+
+    <p class="ta-quick-time-status" role="status" aria-live="polite" hidden></p>
+
+    <% if recent.any? %>
+      <div class="ta-recent">
+        <span class="ta-recent-label"><%= l(:label_time_autopilot_recent) %></span>
+        <% recent.each do |issue| %>
+          <button type="button" class="ta-recent-issue" data-issue-id="<%= issue.id %>"
+                  data-label="#<%= issue.id %> <%= issue.subject %>" title="<%= issue.project.name %>">
+            <%= time_autopilot_project_tile(issue.project, size: 18) %>
+            <span>#<%= issue.id %> <%= issue.subject %></span>
+          </button>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <p class="nodata"><%= l(:label_time_autopilot_not_allowed) %></p>
+<% end %>

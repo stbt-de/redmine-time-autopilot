@@ -1,0 +1,14 @@
+<%# Reiter oben: Woche und Zuordnung %>
+<% current = local_assigns[:current] %>
+<% content_for :header_tags do %>
+  <%= stylesheet_link_tag 'time_autopilot', plugin: 'redmine_time_autopilot' %>
+  <%= javascript_include_tag 'time_autopilot', plugin: 'redmine_time_autopilot' %>
+  <%= stylesheet_link_tag 'time_autopilot_blocks', plugin: 'redmine_time_autopilot' %>
+  <%= javascript_include_tag 'time_autopilot_blocks', plugin: 'redmine_time_autopilot', defer: true %>
+<% end %>
+<nav class="tabs ta-tabs" aria-label="<%= l(:label_time_autopilot) %>">
+  <ul>
+    <li><%= link_to l(:label_time_autopilot_tab_week), time_autopilot_path, class: ('selected' if current == :week), 'aria-current': ('page' if current == :week) %></li>
+    <li><%= link_to l(:label_time_autopilot_tab_rules), time_autopilot_rules_path, class: ('selected' if current == :rules), 'aria-current': ('page' if current == :rules) %></li>
+  </ul>
+</nav>

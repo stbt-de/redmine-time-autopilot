@@ -1,0 +1,7 @@
+<% html_title l(:label_time_autopilot_edit_rule) %>
+<%= render 'time_autopilot/tabs', current: :rules %>
+<h2><%= l(:label_time_autopilot_edit_rule) %></h2>
+<%= form_for @rule, as: :rule, url: time_autopilot_rule_path(@rule), method: :patch do |f| %>
+  <%= render 'form', f: f %>
+  <p><%= submit_tag l(:button_save) %> <%= link_to l(:button_cancel), time_autopilot_rules_path %></p>
+<% end %>

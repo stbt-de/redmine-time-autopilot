@@ -1,0 +1,176 @@
+de:
+  my:
+    blocks:
+      quick_time_entry: Zeit buchen
+      my_week: Wochenstunden
+
+  label_time_autopilot: "Zeiten"
+  label_time_autopilot_tab_week: "Woche"
+  label_time_autopilot_tab_rules: "Zuordnung"
+  label_time_autopilot_questions: "Fragen beantworten"
+  label_time_autopilot_ready: "Vorschläge prüfen und buchen"
+  label_time_autopilot_will_create: "wird angelegt"
+  label_time_autopilot_day_booked: "gebucht"
+  label_time_autopilot_day_skipped: "nicht gebucht"
+  label_time_autopilot_day_ready: "bereit"
+  label_time_autopilot_target_issue: "ein Ticket"
+  label_time_autopilot_target_monthly: "das Ticket des Monats"
+  label_time_autopilot_target_skip: "Nicht buchen"
+  label_time_autopilot_kind_folder: "immer (Standard für diese Ordner)"
+  label_time_autopilot_kind_path: "nur bei Dateien unter"
+  label_time_autopilot_kind_branch: "nur im Branch"
+  label_time_autopilot_kind_term: "nur wenn dieses Wort vorkommt"
+  label_time_autopilot_everywhere: "In jedem Ordner"
+  label_time_autopilot_unassigned: "Ordner ohne Zuordnung"
+  label_time_autopilot_preview: "So wird zugeordnet"
+  label_time_autopilot_edit_rule: "Zuordnung ändern"
+
+  field_folders: "Ordner"
+  field_pattern: "Muster"
+  field_subject_term: "Betreff enthält"
+  field_kind: "Wann"
+  field_target: "Geht auf"
+  field_time_autopilot_folders: "Arbeit in"
+  field_time_autopilot_kind: "Wann"
+  field_time_autopilot_pattern: "Muster"
+  field_time_autopilot_target: "Geht auf"
+  field_time_autopilot_subject_term: "Betreff enthält"
+  field_time_autopilot_create_missing: "Fehlt es"
+  field_time_autopilot_close_previous: "Vormonat"
+
+  button_time_autopilot_apply: "Übernehmen"
+  button_time_autopilot_book: "%{hours} h buchen"
+  button_time_autopilot_new_rule: "Neue Zuordnung"
+  button_time_autopilot_add_exception: "Ausnahme hinzufügen"
+  button_time_autopilot_assign: "Zuordnen"
+
+  text_time_autopilot_week_empty: "Für diese Woche gibt es keine Entwürfe."
+  text_time_autopilot_week_total: "%{hours} h erfasst"
+  text_time_autopilot_week_questions:
+    one: "1 Frage offen"
+    other: "%{count} Fragen offen"
+  text_time_autopilot_week_booked: "%{hours} h gebucht"
+  text_time_autopilot_week_skipped: "%{hours} h nicht gebucht"
+  text_time_autopilot_day_questions:
+    one: "1 Frage"
+    other: "%{count} Fragen"
+  text_time_autopilot_question: "Wohin gehört die Arbeit in %{folder}?"
+  text_time_autopilot_issue_placeholder: "Ticket suchen"
+  text_time_autopilot_issue_search: "Ticket suchen"
+  text_time_autopilot_remember: "Diesen Ordner künftig immer so buchen"
+  text_time_autopilot_book_hint: "Es entstehen normale Zeitbuchungen – ändern kannst du sie danach wie gewohnt."
+  text_time_autopilot_nothing_ready: "Alles aus dieser Woche ist gebucht oder wird nicht gebucht."
+  text_time_autopilot_how_to_upload: "Zum Einrichten: Agents schicken ihre Vorschläge über Redmines REST-API mit deinem API-Schlüssel (Mein Konto → API-Zugriffsschlüssel); Details im README des Plugins."
+  text_time_autopilot_rules_intro: "Entsteht von selbst, wenn du Fragen beantwortest. Die genaueste Zuordnung gewinnt: Dateien, dann Branch, dann Wort, zuletzt der Standard des Ordners."
+  text_time_autopilot_refs_always: "Eine Ticketnummer wie #1234 im Branch oder in einer Commit-Nachricht gilt immer – dafür braucht es keine Zuordnung."
+  text_time_autopilot_last_weeks: "%{hours} h in den letzten 4 Wochen"
+  text_time_autopilot_and: " und "
+  text_time_autopilot_except: "außer"
+  text_time_autopilot_goes_to: "geht auf"
+  text_time_autopilot_if_folder: "Arbeit in"
+  text_time_autopilot_if_path: "Dateien unter"
+  text_time_autopilot_if_branch: "im Branch"
+  text_time_autopilot_if_term: "das Wort"
+  text_time_autopilot_monthly_target: "das Ticket des Monats (%{term})"
+  text_time_autopilot_now: "jetzt %{issue}"
+  text_time_autopilot_issue_missing: "Ticket nicht gefunden"
+  text_time_autopilot_will_create: "wird angelegt: %{subject}"
+  text_time_autopilot_none_yet: "noch keins – Einträge bleiben offen"
+  text_time_autopilot_no_template: "ohne Vorlage"
+  text_time_autopilot_folders_info: "Name des Projektordners, je Zeile einer. Bei Ausnahmen leer lassen, wenn sie überall gelten."
+  text_time_autopilot_pattern_info: "Dateien: Ordner wie www/src/Jobs oder Muster wie *.scss · Branch: z. B. feature/filialsuche · Wort: Groß- und Kleinschreibung egal"
+  text_time_autopilot_subject_term_placeholder: "z. B. Wartung"
+  text_time_autopilot_monthly_info: "Gefunden wird das offene Ticket mit diesem Wort im Betreff, das im jeweiligen Monat läuft (Beginn bis Abgabedatum, sonst Monat im Betreff)."
+  text_time_autopilot_create_missing: "beim Buchen aus dem Vormonat anlegen (Betreff mit neuem Monat, Laufzeit der ganze Monat)"
+  text_time_autopilot_close_previous: "dabei das Ticket des Vormonats schließen"
+  text_time_autopilot_activity_default: "Standard des Projekts"
+  text_time_autopilot_reason_chosen: "von dir gewählt"
+  text_time_autopilot_reason_ref: "Ticketnummer in der Arbeit"
+  text_time_autopilot_reason_monthly: "Ticket des Monats (%{term})"
+  text_time_autopilot_reason_monthly_new: "Ticket des Monats – gibt es noch nicht, wird beim Buchen aus %{template} angelegt"
+  text_time_autopilot_reason_path: "weil Dateien unter %{pattern} geändert wurden"
+  text_time_autopilot_reason_branch: "im Branch %{pattern}"
+  text_time_autopilot_reason_term: "weil „%{pattern}“ vorkommt"
+  text_time_autopilot_reason_folder: "alles aus %{folders}"
+
+  notice_time_autopilot_answered: "Übernommen."
+  notice_time_autopilot_booked:
+    one: "1 Zeitbuchung angelegt (%{hours} h)."
+    other: "%{count} Zeitbuchungen angelegt (%{hours} h)."
+  notice_time_autopilot_issues_created: "Neu angelegt: %{issues}."
+
+  error_time_autopilot_cannot_create_issue: "Ticket des Monats kann nicht angelegt werden – dir fehlt das Recht, in %{project} Tickets anzulegen."
+  error_time_autopilot_not_allowed: "Du darfst in %{project} keinen Aufwand buchen."
+  error_time_autopilot_issue_invalid: "Ticket nicht gefunden."
+  error_time_autopilot_question_gone: "Die Frage ist schon beantwortet."
+
+  # Widgets „Zeit buchen“ und „Wochenstunden“ (bis 1.3 in Dashboard Blocks)
+  label_time_autopilot_today: "Heute:"
+  label_time_autopilot_search_placeholder: "#Nummer, Titel oder Projekt"
+  label_time_autopilot_no_match: Kein offenes Ticket gefunden, auf das du Zeit buchen kannst.
+  label_time_autopilot_recent: Zuletzt gebucht
+  label_time_autopilot_open_form: Im vollständigen Formular buchen
+  label_time_autopilot_not_allowed: Du darfst in keinem Projekt Aufwand buchen.
+  label_time_autopilot_week_total: "%{total} von %{target}"
+  label_time_autopilot_week_target: Wochenziel (Stunden)
+  label_time_autopilot_week_chart: Gebuchte Stunden je Tag
+  label_time_autopilot_week_top_project: "Meiste Zeit: %{project} (%{hours})"
+  label_time_autopilot_week_entries: Buchungen ansehen
+  label_time_autopilot_week_previous: Vorige Woche
+  label_time_autopilot_week_next: Nächste Woche
+  label_time_autopilot_week_current: Diese Woche
+  label_time_autopilot_week_number: "KW %{number}"
+  label_time_autopilot_week_user: Stunden von
+  label_time_autopilot_week_of: "Wochenstunden: %{name}"
+  label_time_autopilot_work_hours: Arbeitszeit
+  label_time_autopilot_work_hours_of: "Arbeitszeit von %{name} (Stunden je Tag)"
+  label_time_autopilot_day_target: "Ziel %{hours}"
+  text_time_autopilot_work_hours: Das Wochenziel ist die Summe. Tage mit 0 gelten als frei. Gilt für alle, die diese Woche ansehen.
+  text_time_autopilot_work_hours_fixed: "Das Wochenziel folgt der Arbeitszeit von %{name}. Ändern können das %{name} selbst und Admins."
+  date_format_time_autopilot_day: "%d.%m."
+  button_time_autopilot_log: Buchen
+  button_time_autopilot_undo: Rückgängig
+  button_time_autopilot_clear: Auswahl entfernen
+  notice_time_autopilot_time_logged: "%{hours} auf %{issue} gebucht"
+  notice_time_autopilot_undone: Buchung zurückgenommen
+  error_time_autopilot_choose_issue: Bitte zuerst ein Ticket wählen.
+  error_time_autopilot_issue_not_loggable: Auf dieses Ticket kannst du keine Zeit buchen.
+  error_time_autopilot_not_found: Buchung nicht gefunden oder nicht änderbar.
+  error_time_autopilot_failed: Das hat nicht geklappt. Bitte die Seite neu laden.
+
+  label_time_autopilot_work_hours_own: "Deine Arbeitszeit"
+  label_time_autopilot_timelog_link_waiting: "Zeiten: %{hours} h offen"
+  button_time_autopilot_change_work_hours: "Ändern"
+  button_time_autopilot_open_week: "Woche ansehen"
+  text_time_autopilot_work_hours_info: "Stunden je Wochentag, z. B. Mo–Do 8, Fr 6. Daraus kommen Tagesziel und Wochenziel in „Zeiten“ und im Widget „Wochenstunden“. Leer lassen, wenn du kein festes Ziel willst."
+  text_time_autopilot_work_hours_own: "Das Ziel kommt aus deiner Arbeitszeit."
+  text_time_autopilot_work_hours_hint: "Oder Arbeitszeit je Wochentag festlegen"
+  text_time_autopilot_widget_ready: "%{hours} vorgeschlagen"
+  label_time_autopilot_unknown_source: "Absender ohne Namen"
+
+  label_time_autopilot_how_title: "Zeiten automatisch vorschlagen lassen"
+  label_time_autopilot_self_entry: "Selbst nachtragen"
+  label_time_autopilot_logged: "Gebucht"
+  label_time_autopilot_all_entries: "Alle in „Aufgewendete Zeit“ →"
+  text_time_autopilot_lead: "Deine Arbeitszeit dieser Woche: Was dein Agent mitgeschrieben hat, bestätigst du nur noch. Daneben trägst du selbst nach und siehst, was gebucht ist."
+  text_time_autopilot_day_ready: "%{hours} h vorgeschlagen"
+  text_time_autopilot_legend_logged: "gebucht · %{hours} h"
+  text_time_autopilot_legend_ready: "vorgeschlagen · %{hours} h"
+  text_time_autopilot_legend_target: "Ziel %{hours} h"
+  text_time_autopilot_set_work_hours: "Arbeitszeit festlegen"
+  text_time_autopilot_recorded_by: "Mitgeschrieben von %{source}"
+  text_time_autopilot_source_meta: "%{segments} Abschnitte in %{folders} Ordnern · zuletzt übertragen %{uploaded}"
+  text_time_autopilot_questions_desc: "Hier wurde gearbeitet, aber es steht noch nicht fest, auf welches Ticket die Zeit gehört. Deine Antwort merkt sich die Zuordnung – dann wird nicht wieder gefragt."
+  text_time_autopilot_ready_desc: "Je Tag und Ticket zusammengefasst. Stunden kannst du vor dem Buchen ändern; 0 heißt „nicht buchen“."
+  text_time_autopilot_ready_after_questions: "Sobald die Fragen beantwortet sind, stehen die Vorschläge hier."
+  text_time_autopilot_how_1_html: "<b>Arbeit wird erfasst</b> – ein Agent auf deinem Rechner (z. B. Claude Code mit <code>/stbt-tracking</code>) schickt Tag, Stunden und eine kurze Zusammenfassung je Projektordner. Inhalte deiner Arbeit verlassen den Rechner nicht."
+  text_time_autopilot_how_2_html: "<b>Du sagst einmal, wohin ein Ordner gehört</b> – auf ein Ticket, auf das Ticket des Monats oder gar nicht. Ausnahmen gehen nach Dateien, Branch oder Stichwort."
+  text_time_autopilot_how_3_html: "<b>Ab dann ist die Woche mit einem Klick gebucht</b> – du prüfst die Vorschläge, passt Stunden an und bestätigst."
+  text_time_autopilot_self_entry_desc: "Was kein Agent sieht: Telefonate, Meetings, Arbeit ohne Rechner."
+  text_time_autopilot_nothing_logged: "Diese Woche ist noch nichts gebucht."
+  text_time_autopilot_more:
+    one: "+ 1 weitere"
+    other: "+ %{count} weitere"
+  text_time_autopilot_segments:
+    one: "1 Abschnitt"
+    other: "%{count} Abschnitte"

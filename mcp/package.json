@@ -1,0 +1,15 @@
+{
+  "name": "redmine-time-autopilot-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Redmine Time Autopilot: read the week, answer questions, book proposals, upload drafts",
+  "type": "module",
+  "bin": { "redmine-time-autopilot-mcp": "server.mjs" },
+  "main": "server.mjs",
+  "license": "MIT",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "4.1.12"
+  }
+}

@@ -1,0 +1,60 @@
+<%# Formular einer Zuordnung; Felder je nach Art und Ziel ein- und ausgeblendet (time_autopilot.js) %>
+<% rule = @rule %>
+<%= error_messages_for 'rule' %>
+<div class="ta-editor">
+  <div class="box tabular ta-rule-form">
+    <p>
+      <%= f.label :folders, l(:field_time_autopilot_folders) %>
+      <%= f.text_area :folders, rows: 2, cols: 40 %>
+      <em class="info"><%= l(:text_time_autopilot_folders_info) %></em>
+    </p>
+    <p>
+      <%= f.label :kind, l(:field_time_autopilot_kind) %>
+      <%= f.select :kind, TimeAutopilotRule::KINDS.map { |kind| [l("label_time_autopilot_kind_#{kind}"), kind] }, {}, data: { 'ta-toggle': 'kind' } %>
+    </p>
+    <p data-ta-show="kind:path,branch,term">
+      <%= f.label :pattern, l(:field_time_autopilot_pattern) %>
+      <%= f.text_field :pattern, size: 30 %>
+      <em class="info"><%= l(:text_time_autopilot_pattern_info) %></em>
+    </p>
+    <p>
+      <%= f.label :target, l(:field_time_autopilot_target) %>
+      <%= f.select :target, TimeAutopilotRule::TARGETS.map { |target| [l("label_time_autopilot_target_#{target}"), target] }, {}, data: { 'ta-toggle': 'target' } %>
+    </p>
+    <p data-ta-show="target:issue">
+      <%= f.label :issue_id, l(:field_issue) %>
+      <%= f.text_field :issue_id, size: 40, value: (rule.issue ? "##{rule.issue.id} #{rule.issue.subject.truncate(60)}" : ''), autocomplete: 'off', placeholder: l(:text_time_autopilot_issue_search), data: { 'ta-issue-search': time_autopilot_issues_path } %>
+    </p>
+    <p data-ta-show="target:monthly">
+      <%= f.label :project_id, l(:field_project) %>
+      <%= f.select :project_id, Project.allowed_to(User.current, :log_time).sorted.map { |project| [project.name, project.id] }, include_blank: true %>
+    </p>
+    <p data-ta-show="target:monthly">
+      <%= f.label :subject_term, l(:field_time_autopilot_subject_term) %>
+      <%= f.text_field :subject_term, size: 20, placeholder: l(:text_time_autopilot_subject_term_placeholder) %>
+      <em class="info"><%= l(:text_time_autopilot_monthly_info) %></em>
+    </p>
+    <p data-ta-show="target:monthly">
+      <label><%= l(:field_time_autopilot_create_missing) %></label>
+      <%= f.check_box :create_missing %> <%= l(:text_time_autopilot_create_missing) %>
+    </p>
+    <p data-ta-show="target:monthly">
+      <label><%= l(:field_time_autopilot_close_previous) %></label>
+      <%= f.check_box :close_previous %> <%= l(:text_time_autopilot_close_previous) %>
+    </p>
+    <p data-ta-show="target:issue,monthly">
+      <%= f.label :activity_id, l(:field_activity) %>
+      <%= f.select :activity_id, TimeEntryActivity.shared.active.sorted.map { |activity| [activity.name, activity.id] }, include_blank: l(:text_time_autopilot_activity_default) %>
+    </p>
+  </div>
+  <% if rule.persisted? && rule.monthly? && rule.project %>
+    <div class="ta-preview">
+      <h3><%= l(:label_time_autopilot_preview) %></h3>
+      <ul>
+        <% ta_monthly_preview(rule).each do |month, label, found| %>
+          <li><span><%= month %></span><span class="<%= 'ta-hint' unless found %>"><%= label %></span></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+</div>

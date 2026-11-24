@@ -1,0 +1,121 @@
+<%# Gebuchte Stunden einer Woche je Tag, gegen ein Wochenziel.
+    Woche (params[:my_week_start]) und Benutzer (settings[:user_id]) kommen
+    über das Formular unten: Redmine speichert die Einstellung und setzt den
+    Block per Ajax neu ein (my/update_page); die Woche reist als Parameter mit. %>
+<% users = RedmineTimeAutopilot::WeekSummary.selectable_users(user) %>
+<% person = RedmineTimeAutopilot::WeekSummary.resolve_user(user, settings[:user_id]) %>
+<% week = RedmineTimeAutopilot::WeekSummary.new(user, target: settings[:target_hours], user: person,
+                                                  date: params[:my_week_start]) %>
+<% top = week.top_project %>
+<% schedule_editable = RedmineTimeAutopilot::WorkSchedule.editable?(user, person) %>
+<% scale = [week.daily_target, week.days.map(&:hours).max.to_f].max %>
+
+<div class="contextual">
+  <%= link_to_function sprite_icon('settings', l(:label_options)), "$('##{block}-settings').toggle();",
+                       class: 'icon-only icon-settings', title: l(:label_options) %>
+</div>
+
+<%# Mehrere Instanzen (my_week, my_week__1, …) unterscheiden sich am Namen %>
+<h3>
+  <%= week.own? ? l('my.blocks.my_week') : l(:label_time_autopilot_week_of, name: person.name) %>
+  <span class="ta-mw-total">
+    <%= l(:label_time_autopilot_week_total, total: time_autopilot_hours(week.total), target: time_autopilot_hours(week.target)) %>
+  </span>
+</h3>
+
+<div id="<%= block %>-settings" style="display: none;">
+  <%= form_tag(my_page_path, remote: true) do %>
+    <%= hidden_field_tag 'my_week_start', week.start.iso8601, id: nil %>
+    <%= hidden_field_tag "settings[#{block}][user_id]", person.id, id: nil %>
+    <% if week.scheduled? %>
+      <p class="ta-work-hours-fixed">
+        <%= week.own? ? l(:text_time_autopilot_work_hours_own) : l(:text_time_autopilot_work_hours_fixed, name: person.name) %>
+        <% if schedule_editable %><%= link_to l(:button_time_autopilot_change_work_hours), time_autopilot_work_hours_path(person, week.own?) %><% end %>
+      </p>
+    <% else %>
+      <p>
+        <label for="<%= block %>-target"><%= l(:label_time_autopilot_week_target) %></label>
+        <%= number_field_tag "settings[#{block}][target_hours]", week.target, id: "#{block}-target",
+                             min: 1, max: 168, step: 0.5, size: 5 %>
+      </p>
+      <% if schedule_editable %>
+        <p class="ta-work-hours-fixed"><%= link_to l(:text_time_autopilot_work_hours_hint), time_autopilot_work_hours_path(person, week.own?) %></p>
+      <% end %>
+    <% end %>
+    <p>
+      <%= submit_tag l(:button_save) %>
+      <%= link_to_function l(:button_cancel), "$('##{block}-settings').toggle();" %>
+    </p>
+  <% end %>
+</div>
+
+<%= form_tag(my_page_path, remote: true, class: 'ta-mw-nav') do %>
+  <%= hidden_field_tag 'my_week_start', week.start.iso8601, id: nil %>
+  <span class="ta-mw-steps">
+    <button type="submit" name="my_week_start" value="<%= week.previous_start.iso8601 %>"
+            class="ta-mw-step" title="<%= l(:label_time_autopilot_week_previous) %>"
+            aria-label="<%= l(:label_time_autopilot_week_previous) %>"><%= sprite_icon('angle-left') %></button>
+    <span class="ta-mw-label">
+      <strong><%= l(:label_time_autopilot_week_number, number: week.number) %></strong>
+      <span><%= ::I18n.l(week.start, format: l(:date_format_time_autopilot_day)) %>–<%= ::I18n.l(week.finish, format: l(:date_format_time_autopilot_day)) %></span>
+    </span>
+    <button type="submit" name="my_week_start" value="<%= week.next_start.iso8601 %>"
+            class="ta-mw-step" title="<%= l(:label_time_autopilot_week_next) %>"
+            aria-label="<%= l(:label_time_autopilot_week_next) %>"><%= sprite_icon('angle-right') %></button>
+    <% unless week.current? %>
+      <button type="submit" name="my_week_start" value="" class="ta-mw-current">
+        <%= l(:label_time_autopilot_week_current) %>
+      </button>
+    <% end %>
+  </span>
+  <% if users.size > 1 %>
+    <label class="ta-mw-user">
+      <span class="ta-visually-hidden"><%= l(:label_time_autopilot_week_user) %></span>
+      <%= select_tag "settings[#{block}][user_id]",
+                     options_from_collection_for_select(users, :id, :name, person.id),
+                     id: "#{block}-user" %>
+    </label>
+  <% else %>
+    <%= hidden_field_tag "settings[#{block}][user_id]", person.id, id: nil %>
+  <% end %>
+<% end %>
+
+<ol class="ta-mw" aria-label="<%= l(:label_time_autopilot_week_chart) %>">
+  <% week.days.each do |day| %>
+    <li class="ta-mw-day<%= ' ta-mw-day-today' if day.today %>">
+      <span class="ta-mw-day-hours"><%= day.hours.positive? ? format_hours(day.hours) : '–' %></span>
+      <span class="ta-mw-day-bar" aria-hidden="true">
+        <span style="height: <%= scale.positive? ? [(day.hours * 100.0 / scale).round, 100].min : 0 %>%"></span>
+        <% if day.target.positive? && scale.positive? %>
+          <i class="ta-mw-day-target" style="bottom: <%= [(day.target * 100.0 / scale).round, 100].min %>%"></i>
+        <% end %>
+      </span>
+      <span class="ta-mw-day-name" title="<%= format_date(day.date) %><%= " · #{l(:label_time_autopilot_day_target, hours: time_autopilot_hours(day.target))}" if day.target.positive? %>"><%= ::I18n.t('date.abbr_day_names')[day.date.wday] %></span>
+    </li>
+  <% end %>
+</ol>
+
+<p class="ta-mw-footer">
+  <% if top %>
+    <span><%= l(:label_time_autopilot_week_top_project, project: top.first.name, hours: time_autopilot_hours(top.last)) %></span>
+  <% end %>
+  <%= link_to l(:label_time_autopilot_week_entries),
+              time_entries_path(set_filter: 1, f: %w[spent_on user_id], op: { spent_on: '><', user_id: '=' },
+                                v: { spent_on: [week.start.iso8601, week.finish.iso8601], user_id: [person.id.to_s] }) %>
+</p>
+
+<%# Vorschläge aus Time Autopilot: was in dieser Woche noch aufs Buchen wartet %>
+<% if week.own? %>
+  <% pending = RedmineTimeAutopilot::Week.new(user, week: week.start.iso8601) %>
+  <% if pending.entries.any? || pending.questions.any? %>
+    <p class="ta-mw-pending">
+      <span>
+        <% parts = [] %>
+        <% parts << l(:text_time_autopilot_widget_ready, hours: time_autopilot_hours(pending.entries.sum(&:hours))) if pending.entries.any? %>
+        <% parts << l(:text_time_autopilot_week_questions, count: pending.questions.size) if pending.questions.any? %>
+        <%= parts.join(' · ') %>
+      </span>
+      <%= link_to l(:button_time_autopilot_open_week), time_autopilot_path(week: week.start.iso8601) %>
+    </p>
+  <% end %>
+<% end %>

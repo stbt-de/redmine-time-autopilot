@@ -1,0 +1,176 @@
+en:
+  my:
+    blocks:
+      quick_time_entry: Log time
+      my_week: Weekly hours
+
+  label_time_autopilot: "Time"
+  label_time_autopilot_tab_week: "Week"
+  label_time_autopilot_tab_rules: "Rules"
+  label_time_autopilot_questions: "Answer questions"
+  label_time_autopilot_ready: "Check and book proposals"
+  label_time_autopilot_will_create: "will be created"
+  label_time_autopilot_day_booked: "booked"
+  label_time_autopilot_day_skipped: "not booked"
+  label_time_autopilot_day_ready: "ready"
+  label_time_autopilot_target_issue: "an issue"
+  label_time_autopilot_target_monthly: "the issue of the month"
+  label_time_autopilot_target_skip: "Don't book"
+  label_time_autopilot_kind_folder: "always (default for these folders)"
+  label_time_autopilot_kind_path: "only for files under"
+  label_time_autopilot_kind_branch: "only on branch"
+  label_time_autopilot_kind_term: "only when this word appears"
+  label_time_autopilot_everywhere: "In every folder"
+  label_time_autopilot_unassigned: "Folders without a rule"
+  label_time_autopilot_preview: "How it is assigned"
+  label_time_autopilot_edit_rule: "Edit rule"
+
+  field_folders: "Folders"
+  field_pattern: "Pattern"
+  field_subject_term: "Subject contains"
+  field_kind: "When"
+  field_target: "Goes to"
+  field_time_autopilot_folders: "Work in"
+  field_time_autopilot_kind: "When"
+  field_time_autopilot_pattern: "Pattern"
+  field_time_autopilot_target: "Goes to"
+  field_time_autopilot_subject_term: "Subject contains"
+  field_time_autopilot_create_missing: "If missing"
+  field_time_autopilot_close_previous: "Previous month"
+
+  button_time_autopilot_apply: "Apply"
+  button_time_autopilot_book: "Book %{hours} h"
+  button_time_autopilot_new_rule: "New rule"
+  button_time_autopilot_add_exception: "Add exception"
+  button_time_autopilot_assign: "Assign"
+
+  text_time_autopilot_week_empty: "No drafts for this week."
+  text_time_autopilot_week_total: "%{hours} h recorded"
+  text_time_autopilot_week_questions:
+    one: "1 open question"
+    other: "%{count} open questions"
+  text_time_autopilot_week_booked: "%{hours} h booked"
+  text_time_autopilot_week_skipped: "%{hours} h not booked"
+  text_time_autopilot_day_questions:
+    one: "1 question"
+    other: "%{count} questions"
+  text_time_autopilot_question: "Where does the work in %{folder} belong?"
+  text_time_autopilot_issue_placeholder: "Search issue"
+  text_time_autopilot_issue_search: "Search issue"
+  text_time_autopilot_remember: "Always book this folder like this"
+  text_time_autopilot_book_hint: "These become regular time entries – you can change them afterwards as usual."
+  text_time_autopilot_nothing_ready: "Everything in this week is booked or skipped."
+  text_time_autopilot_how_to_upload: "To set it up: agents send their proposals through Redmine’s REST API with your API key (My account → API access key); details in the plugin’s README."
+  text_time_autopilot_rules_intro: "Created as you answer questions. The most specific rule wins: files, then branch, then word, finally the folder default."
+  text_time_autopilot_refs_always: "An issue number like #1234 in the branch or a commit message always wins – no rule needed."
+  text_time_autopilot_last_weeks: "%{hours} h in the last 4 weeks"
+  text_time_autopilot_and: " and "
+  text_time_autopilot_except: "except"
+  text_time_autopilot_goes_to: "goes to"
+  text_time_autopilot_if_folder: "Work in"
+  text_time_autopilot_if_path: "files under"
+  text_time_autopilot_if_branch: "on branch"
+  text_time_autopilot_if_term: "the word"
+  text_time_autopilot_monthly_target: "the issue of the month (%{term})"
+  text_time_autopilot_now: "now %{issue}"
+  text_time_autopilot_issue_missing: "issue not found"
+  text_time_autopilot_will_create: "will be created: %{subject}"
+  text_time_autopilot_none_yet: "none yet – entries stay open"
+  text_time_autopilot_no_template: "no template"
+  text_time_autopilot_folders_info: "Name of the project folder, one per line. Leave empty for exceptions that apply everywhere."
+  text_time_autopilot_pattern_info: "Files: a folder like src/Jobs or a pattern like *.scss · Branch: e.g. feature/store-finder · Word: case-insensitive"
+  text_time_autopilot_subject_term_placeholder: "e.g. Maintenance"
+  text_time_autopilot_monthly_info: "Finds the open issue with this word in its subject that runs in the given month (start to due date, otherwise month in the subject)."
+  text_time_autopilot_create_missing: "create it from the previous month when booking (subject with the new month, runs the whole month)"
+  text_time_autopilot_close_previous: "close the previous month's issue"
+  text_time_autopilot_activity_default: "Project default"
+  text_time_autopilot_reason_chosen: "chosen by you"
+  text_time_autopilot_reason_ref: "issue number in the work"
+  text_time_autopilot_reason_monthly: "issue of the month (%{term})"
+  text_time_autopilot_reason_monthly_new: "issue of the month – doesn't exist yet, will be created from %{template} when booking"
+  text_time_autopilot_reason_path: "files under %{pattern} were changed"
+  text_time_autopilot_reason_branch: "on branch %{pattern}"
+  text_time_autopilot_reason_term: "“%{pattern}” appears"
+  text_time_autopilot_reason_folder: "everything from %{folders}"
+
+  notice_time_autopilot_answered: "Applied."
+  notice_time_autopilot_booked:
+    one: "1 time entry created (%{hours} h)."
+    other: "%{count} time entries created (%{hours} h)."
+  notice_time_autopilot_issues_created: "Created: %{issues}."
+
+  error_time_autopilot_cannot_create_issue: "The issue of the month can't be created – you may not add issues in %{project}."
+  error_time_autopilot_not_allowed: "You may not log time in %{project}."
+  error_time_autopilot_issue_invalid: "Issue not found."
+  error_time_autopilot_question_gone: "This question has already been answered."
+
+  # Widgets „Zeit buchen“ und „Wochenstunden“ (bis 1.3 in Dashboard Blocks)
+  label_time_autopilot_today: "Today:"
+  label_time_autopilot_search_placeholder: "#number, subject or project"
+  label_time_autopilot_no_match: No open issue found that you can log time on.
+  label_time_autopilot_recent: Recently logged
+  label_time_autopilot_open_form: Log in the full form
+  label_time_autopilot_not_allowed: You are not allowed to log time in any project.
+  label_time_autopilot_week_total: "%{total} of %{target}"
+  label_time_autopilot_week_target: Weekly target (hours)
+  label_time_autopilot_week_chart: Hours logged per day
+  label_time_autopilot_week_top_project: "Most time: %{project} (%{hours})"
+  label_time_autopilot_week_entries: View entries
+  label_time_autopilot_week_previous: Previous week
+  label_time_autopilot_week_next: Next week
+  label_time_autopilot_week_current: This week
+  label_time_autopilot_week_number: "Week %{number}"
+  label_time_autopilot_week_user: Hours of
+  label_time_autopilot_week_of: "Weekly hours: %{name}"
+  label_time_autopilot_work_hours: Working hours
+  label_time_autopilot_work_hours_of: "Working hours of %{name} (per day)"
+  label_time_autopilot_day_target: "Target %{hours}"
+  text_time_autopilot_work_hours: The weekly target is the sum. Days with 0 count as days off. Applies to everyone viewing this week.
+  text_time_autopilot_work_hours_fixed: "The weekly target follows the working hours of %{name}. Only %{name} and administrators can change them."
+  date_format_time_autopilot_day: "%b %-d"
+  button_time_autopilot_log: Log
+  button_time_autopilot_undo: Undo
+  button_time_autopilot_clear: Clear selection
+  notice_time_autopilot_time_logged: "%{hours} logged on %{issue}"
+  notice_time_autopilot_undone: Entry removed
+  error_time_autopilot_choose_issue: Please choose an issue first.
+  error_time_autopilot_issue_not_loggable: You cannot log time on this issue.
+  error_time_autopilot_not_found: Entry not found or not editable.
+  error_time_autopilot_failed: Something went wrong. Please reload the page.
+
+  label_time_autopilot_work_hours_own: "Your working hours"
+  label_time_autopilot_timelog_link_waiting: "Time: %{hours} h open"
+  button_time_autopilot_change_work_hours: "Change"
+  button_time_autopilot_open_week: "Open week"
+  text_time_autopilot_work_hours_info: "Hours per weekday, e.g. Mon–Thu 8, Fri 6. Daily and weekly targets in Time and the Weekly hours widget come from here. Leave empty for no fixed target."
+  text_time_autopilot_work_hours_own: "The target comes from your working hours."
+  text_time_autopilot_work_hours_hint: "Or set working hours per weekday"
+  text_time_autopilot_widget_ready: "%{hours} proposed"
+  label_time_autopilot_unknown_source: "Unnamed sender"
+
+  label_time_autopilot_how_title: "Get time proposed automatically"
+  label_time_autopilot_self_entry: "Log it yourself"
+  label_time_autopilot_logged: "Logged"
+  label_time_autopilot_all_entries: "All in “Spent time” →"
+  text_time_autopilot_lead: "Your working time this week: what your agent recorded, you only confirm. Next to it you log time yourself and see what is logged."
+  text_time_autopilot_day_ready: "%{hours} h proposed"
+  text_time_autopilot_legend_logged: "logged · %{hours} h"
+  text_time_autopilot_legend_ready: "proposed · %{hours} h"
+  text_time_autopilot_legend_target: "target %{hours} h"
+  text_time_autopilot_set_work_hours: "Set working hours"
+  text_time_autopilot_recorded_by: "Recorded by %{source}"
+  text_time_autopilot_source_meta: "%{segments} segments in %{folders} folders · last sent %{uploaded}"
+  text_time_autopilot_questions_desc: "Work happened here, but it's not clear yet which issue the time belongs to. Your answer is remembered – you won't be asked again."
+  text_time_autopilot_ready_desc: "Per day and issue. You can change hours before booking; 0 means “don't book”."
+  text_time_autopilot_ready_after_questions: "Proposals appear here once the questions are answered."
+  text_time_autopilot_how_1_html: "<b>Work is recorded</b> – an agent on your computer (e.g. Claude Code) sends day, hours and a short summary per project folder. The content of your work stays on your computer."
+  text_time_autopilot_how_2_html: "<b>You say once where a folder belongs</b> – an issue, the issue of the month or nowhere. Exceptions by files, branch or keyword."
+  text_time_autopilot_how_3_html: "<b>From then on the week is booked with one click</b> – you check the proposals, adjust hours and confirm."
+  text_time_autopilot_self_entry_desc: "What no agent sees: calls, meetings, work away from the computer."
+  text_time_autopilot_nothing_logged: "Nothing logged this week yet."
+  text_time_autopilot_more:
+    one: "+ 1 more"
+    other: "+ %{count} more"
+  text_time_autopilot_segments:
+    one: "1 segment"
+    other: "%{count} segments"

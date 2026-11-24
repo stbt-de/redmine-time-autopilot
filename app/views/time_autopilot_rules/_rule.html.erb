@@ -1,0 +1,15 @@
+<%# Eine Zuordnung als Satz: „Arbeit in … geht auf …“ %>
+<div class="ta-rule">
+  <% if local_assigns[:skipped] %>
+    <p><%= safe_join(rule.folder_list.map { |folder| content_tag(:b, folder) }, l(:text_time_autopilot_and)) %></p>
+  <% else %>
+    <p>
+      <% if exception %><span class="ta-hint"><%= l(:text_time_autopilot_except) %></span> <% end %><%= ta_rule_condition(rule) %>
+      <br><span class="ta-hint"><%= l(:text_time_autopilot_goes_to) %></span> <%= ta_rule_target(rule) %>
+    </p>
+  <% end %>
+  <span class="ta-rule-actions">
+    <%= link_to l(:button_edit), edit_time_autopilot_rule_path(rule), class: 'ta-link' %>
+    <%= delete_link time_autopilot_rule_path(rule) %>
+  </span>
+</div>

@@ -1,0 +1,60 @@
+<%# Zuordnung: nach Ordner-Standard gruppiert, mit Ausnahmen %>
+<% html_title l(:label_time_autopilot_tab_rules) %>
+<%= render 'time_autopilot/tabs', current: :rules %>
+
+<div class="contextual">
+  <%= link_to l(:button_time_autopilot_new_rule), new_time_autopilot_rule_path, class: 'icon icon-add' %>
+</div>
+<h2><%= l(:label_time_autopilot_tab_rules) %></h2>
+<p class="ta-sub"><%= l(:text_time_autopilot_rules_intro) %></p>
+
+<% groups = ta_rule_groups(@rules) %>
+
+<% groups[:groups].each do |group| %>
+  <section class="ta-card">
+    <%= render 'rule', rule: group[:default], exception: false %>
+    <% group[:exceptions].each do |rule| %>
+      <%= render 'rule', rule: rule, exception: true %>
+    <% end %>
+    <p class="ta-card-foot"><%= link_to l(:button_time_autopilot_add_exception), new_time_autopilot_rule_path(kind: 'path', folders: group[:default].folders), class: 'ta-btn' %></p>
+  </section>
+<% end %>
+
+<% if groups[:everywhere].any? %>
+  <section class="ta-card">
+    <h3><%= l(:label_time_autopilot_everywhere) %></h3>
+    <% groups[:everywhere].each do |rule| %>
+      <%= render 'rule', rule: rule, exception: false %>
+    <% end %>
+  </section>
+<% end %>
+
+<% if groups[:skipped].any? %>
+  <section class="ta-card">
+    <h3><%= l(:label_time_autopilot_target_skip) %></h3>
+    <% groups[:skipped].each do |rule| %>
+      <%= render 'rule', rule: rule, exception: false, skipped: true %>
+    <% end %>
+  </section>
+<% end %>
+
+<% if @unassigned.any? %>
+  <section class="ta-card">
+    <h3><%= l(:label_time_autopilot_unassigned) %></h3>
+    <% @unassigned.each do |folder, hours| %>
+      <div class="ta-rule">
+        <p><b><%= folder %></b> <span class="ta-hint">· <%= l(:text_time_autopilot_last_weeks, hours: ta_hours(hours)) %></span></p>
+        <span class="ta-rule-actions">
+          <%= link_to l(:button_time_autopilot_assign), new_time_autopilot_rule_path(folders: folder), class: 'ta-btn' %>
+          <%= link_to l(:label_time_autopilot_target_skip), new_time_autopilot_rule_path(folders: folder, target: 'skip'), class: 'ta-btn' %>
+        </span>
+      </div>
+    <% end %>
+  </section>
+<% end %>
+
+<% if @rules.empty? && @unassigned.empty? %>
+  <p class="nodata"><%= l(:label_no_data) %></p>
+<% end %>
+
+<p class="ta-hint"><%= l(:text_time_autopilot_refs_always) %></p>

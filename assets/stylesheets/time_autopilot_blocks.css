@@ -1,0 +1,563 @@
+/* =============================================================================
+   Time Autopilot – Widgets „Zeit buchen“ und „Wochenstunden“ (Meine Seite,
+   „Selbst nachtragen“ auf der Seite „Zeiten“); bis 1.3 in Dashboard Blocks
+
+   Neutrale Grundgestaltung, die zu Redmines Standard-Theme passt. Regeln
+   mit einer Klasse (Spezifität 0,1,0): stark genug gegen Elementregeln von
+   Redmine und Themes (form, fieldset, label), leicht zu überschreiben.
+   Farben über Custom Properties:
+
+     --ta-border      Rahmen, Trennlinien
+     --ta-muted       Nebentext
+     --ta-surface     Flächen (Kacheln, Balken-Hintergrund)
+     --ta-accent      Balken, gewählte Dauer
+     --ta-alert-bg    Überfällig (Fläche) …
+     --ta-alert-text  … und Text
+   ============================================================================= */
+
+/* :where(): Themes setzen die Werte auf :root und gewinnen damit */
+:where(:root) {
+  --ta-border: #e5e5e5;
+  --ta-muted: #666;
+  --ta-surface: #f5f5f5;
+  --ta-accent: #333;
+  --ta-alert-bg: #fef0ea;
+  --ta-alert-text: #b23600;
+  --ta-success-bg: #eaf5ee;
+  --ta-success-text: #24693c;
+}
+
+/* Kachel mit Anfangsbuchstaben (ohne redmine_project_icons) */
+.ta-project-tile {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--ta-tile-size, 20px);
+  height: var(--ta-tile-size, 20px);
+  font-size: calc(var(--ta-tile-size, 20px) * 0.5);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--ta-muted);
+  background-color: var(--ta-surface);
+  border-radius: 5px;
+}
+
+/* --- Wochenstunden --------------------------------------------------------- */
+
+/* Überschrift mit Summe: bricht als Ganzes um, ohne Einzug in der zweiten
+   Zeile (nicht mitten in "24:00 h von 40:00 h") */
+h3:has(> .ta-mw-total, > .ta-today) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 8px;
+}
+
+.ta-mw-total,
+.ta-today {
+  white-space: nowrap;
+  font-weight: normal;
+  color: var(--ta-muted);
+}
+
+/* Arbeitszeit je Wochentag: sieben kleine Felder nebeneinander, bricht schmal um */
+.ta-work-hours {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  min-width: 0;
+  margin: 0 0 10px;
+  padding: 0;
+  border: 0;
+}
+
+.ta-work-hours legend {
+  margin: 0 0 6px;
+  padding: 0;
+  font-weight: 600;
+}
+
+.ta-work-hours label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  margin: 0;
+  float: none;
+  width: auto;
+  text-align: left;
+  font-weight: normal;
+}
+
+.ta-work-hours label > span {
+  color: var(--ta-muted);
+  font-size: 0.9em;
+}
+
+.ta-work-hours input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  font-variant-numeric: tabular-nums;
+}
+
+.ta-work-hours .info {
+  grid-column: 1 / -1;
+  color: var(--ta-muted);
+}
+
+@media (max-width: 480px) {
+  .ta-work-hours {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* Woche wechseln und Mitarbeiter wählen: [‹] KW 47 16.11.–22.11. [›] … [Person ▾] */
+.ta-mw-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin: 4px 0 0;
+}
+
+.ta-mw-steps {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Schlichte Knöpfe: Themes setzen button[type=submit] (auch :hover) als
+   Primärknopf – Selektoren hier bewusst eine Klasse stärker */
+.ta-mw-nav button.ta-mw-step,
+.ta-mw-nav button.ta-mw-current {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  background: none;
+  border: 0;
+  border-radius: 6px;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.ta-mw-nav button.ta-mw-step {
+  width: 28px;
+  padding: 0;
+}
+
+.ta-mw-nav button.ta-mw-current {
+  padding: 0 8px;
+  color: var(--ta-muted);
+}
+
+.ta-mw-nav button.ta-mw-step:hover,
+.ta-mw-nav button.ta-mw-current:hover {
+  color: inherit;
+  background-color: var(--ta-surface);
+  border: 0;
+}
+
+.ta-mw-step .s18 {
+  width: 18px;
+  height: 18px;
+}
+
+.ta-mw-label {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 0 4px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ta-mw-label > span {
+  color: var(--ta-muted);
+}
+
+.ta-mw-user {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+}
+
+.ta-mw-user select {
+  max-width: 100%;
+}
+
+.ta-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.ta-mw {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  align-items: end;
+  gap: 12px;
+  height: 140px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ta-mw-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  height: 100%;
+}
+
+.ta-mw-day-hours {
+  font-size: 0.9em;
+  font-variant-numeric: tabular-nums;
+  color: var(--ta-muted);
+}
+
+.ta-mw-day-bar {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: flex-end;
+  width: 100%;
+  max-width: 48px;
+  min-height: 0;
+  background-color: var(--ta-surface);
+  border-radius: 5px 5px 2px 2px;
+}
+
+.ta-mw-day-bar > span {
+  display: block;
+  width: 100%;
+  background-color: var(--ta-accent);
+  border-radius: inherit;
+}
+
+/* Tagesziel laut Arbeitszeit: feine Linie quer über den Balken */
+.ta-mw-day-target {
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  height: 0;
+  border-top: 2px dashed var(--ta-muted);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.ta-mw-day-name {
+  font-size: 0.9em;
+  color: var(--ta-muted);
+}
+
+.ta-mw-day-today .ta-mw-day-name {
+  font-weight: 600;
+  color: inherit;
+}
+
+.ta-mw-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 12px 0 0;
+  color: var(--ta-muted);
+}
+
+/* --- Zeit buchen --------------------------------------------------------------- */
+
+.ta-quick-time-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px 12px;
+}
+
+.ta-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.ta-field > label, .ta-field > legend {
+  padding: 0;
+  font-weight: normal;
+  font-size: 0.9em;
+  color: var(--ta-muted);
+}
+
+.ta-issue {
+  flex: 3 1 280px;
+}
+
+.ta-comment {
+  flex: 2 1 200px;
+}
+
+.ta-combobox {
+  position: relative;
+}
+
+.ta-issue-search {
+  box-sizing: border-box;
+  width: 100%;
+  padding-right: 32px;
+}
+
+.ta-issue-clear {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--ta-muted);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  transform: translateY(-50%);
+}
+
+.ta-issue-clear[hidden],
+.ta-issue-options[hidden] {
+  display: none;
+}
+
+.ta-issue-options {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  left: 0;
+  z-index: 20;
+  max-height: 320px;
+  margin: 0;
+  padding: 4px;
+  overflow-y: auto;
+  list-style: none;
+  background-color: #fff;
+  border: 1px solid var(--ta-border);
+  border-radius: 8px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+.ta-issue-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.ta-issue-option:hover, .ta-issue-option[aria-selected="true"] {
+  background-color: var(--ta-surface);
+}
+
+.ta-issue-tile {
+  display: flex;
+  flex-shrink: 0;
+}
+
+.ta-issue-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.ta-issue-subject {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Projekt kürzen, die Nummer bleibt sichtbar */
+.ta-issue-meta {
+  display: flex;
+  gap: 4px;
+  min-width: 0;
+  white-space: nowrap;
+  font-size: 0.9em;
+  color: var(--ta-muted);
+}
+
+.ta-issue-project {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ta-issue-number {
+  flex-shrink: 0;
+}
+
+.ta-issue-empty {
+  padding: 8px;
+  color: var(--ta-muted);
+}
+
+.ta-duration-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ta-duration-choice {
+  min-width: 48px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.ta-duration-choice[aria-pressed="true"] {
+  color: #fff;
+  background-color: var(--ta-accent);
+  border-color: var(--ta-accent);
+}
+
+.ta-hours {
+  width: 4.5em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.ta-quick-time-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  margin: 12px 0 0;
+  padding: 8px 12px;
+  background-color: var(--ta-surface);
+  border-radius: 8px;
+}
+
+.ta-quick-time-status[hidden] {
+  display: none;
+}
+
+.ta-status-success {
+  color: var(--ta-success-text);
+  background-color: var(--ta-success-bg);
+}
+
+.ta-status-error {
+  color: var(--ta-alert-text);
+  background-color: var(--ta-alert-bg);
+}
+
+.ta-undo {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  background: none;
+  border: 0;
+}
+
+.ta-quick-time-status a {
+  color: inherit;
+  font-weight: 600;
+}
+
+.ta-recent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.ta-recent-label {
+  margin-right: 4px;
+  font-size: 0.9em;
+  color: var(--ta-muted);
+}
+
+.ta-recent-issue {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 300px;
+  /* links genug Luft, damit das Icon nicht an der Rundung klebt */
+  padding: 3px 12px 3px 8px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  background-color: #fff;
+  border: 1px solid var(--ta-border);
+  border-radius: 999px;
+}
+
+.ta-recent-issue > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Mobil: Felder untereinander, große Tippflächen */
+@media screen and (max-width: 899px) {
+  .ta-quick-time-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* untereinander: flex-basis wäre sonst die Höhe */
+  .ta-field {
+    flex: none;
+  }
+
+  .ta-duration-choices {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) 5em;
+  }
+
+  .ta-duration-choice, .ta-hours {
+    min-height: 44px;
+  }
+
+  .ta-submit input {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .ta-recent {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ta-recent-issue {
+    box-sizing: border-box;
+    justify-content: flex-start;
+    gap: 8px;
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+    min-height: 40px;
+    padding: 4px 16px 4px 12px;
+  }
+}
+

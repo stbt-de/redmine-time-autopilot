@@ -1,0 +1,16 @@
+# Redmine mit Test-Gems für die Plugin-Tests (dev/run-tests.sh).
+# Das offizielle Image installiert ohne die Gruppen development und test.
+ARG REDMINE_VERSION=7.0
+FROM redmine:${REDMINE_VERSION}
+
+WORKDIR /usr/src/redmine
+
+# Compiler für Gems mit nativen Erweiterungen (ältere Images haben keinen)
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends build-essential \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN printf 'test:\n  adapter: sqlite3\n  database: db/test.sqlite3\n' > config/database.yml \
+ && bundle config set --local without development \
+ && bundle install --quiet \
+ && RAILS_ENV=test bin/rails db:create db:migrate

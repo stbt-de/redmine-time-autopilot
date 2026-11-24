@@ -1,0 +1,18 @@
+<%# „Aufgewendete Zeit“: Link zur Seite „Zeiten“ oben rechts, mit offenen
+    Vorschlägen. Redmine hat dort keinen Hook, daher per Script. %>
+<%# Offen: was noch gebucht oder zugeordnet werden will – ohne „nicht buchen“ %>
+<% resolver = RedmineTimeAutopilot::Resolver.new(User.current) %>
+<% waiting = TimeAutopilotDraft.for_user(User.current).pending.where(spent_on: (User.current.today - 56)..)
+                               .reject { |draft| resolver.resolve(draft).skip? }.sum(&:hours).to_f %>
+<% label = waiting.positive? ? l(:label_time_autopilot_timelog_link_waiting, hours: number_with_precision(waiting, precision: 2, strip_insignificant_zeros: true)) : l(:label_time_autopilot) %>
+<%= javascript_tag do %>
+  document.addEventListener('DOMContentLoaded', function () {
+    var contextual = document.querySelector('#content > .contextual');
+    if (!contextual) return;
+    var link = document.createElement('a');
+    link.href = <%= raw time_autopilot_path.to_json %>;
+    link.className = 'icon icon-time ta-timelog-link';
+    link.textContent = <%= raw label.to_json %>;
+    contextual.insertBefore(link, contextual.firstChild);
+  });
+<% end %>

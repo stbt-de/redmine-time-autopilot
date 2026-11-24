@@ -1,0 +1,178 @@
+<%# Seite „Zeiten“: links, was der Agent mitgeschrieben hat (Fragen,
+    Vorschläge), rechts selbst nachtragen und was gebucht ist %>
+<% week = @week %>
+<% html_title "#{l(:label_time_autopilot)} · #{week.label}" %>
+<%= render 'tabs', current: :week %>
+
+<div class="ta-head">
+  <div>
+    <h2><%= l(:label_time_autopilot) %> · <%= week.label %> <span class="ta-head-range"><%= week.range_label %></span></h2>
+    <p class="ta-lead"><%= l(:text_time_autopilot_lead) %></p>
+  </div>
+  <div class="ta-nav">
+    <%= link_to "‹ KW #{week.previous_week.cweek}", time_autopilot_path(week: week.previous_week.iso8601), class: 'ta-btn', 'aria-label': l(:label_previous) %>
+    <%= link_to "KW #{week.next_week.cweek} ›", time_autopilot_path(week: week.next_week.iso8601), class: 'ta-btn', 'aria-label': l(:label_next) %>
+  </div>
+</div>
+
+<%# Wochenleiste: gebucht dunkel, vorgeschlagen hell, gegen das Tagesziel %>
+<div class="ta-week">
+  <% week.days.each do |day| %>
+    <% total = day.logged_hours + day.ready_hours.to_f %>
+    <% scale = [day.target.to_f, total, 1].max %>
+    <div class="ta-day<%= ' is-open' if day.open? %><%= ' is-today' if day.date == User.current.today %>">
+      <b><%= ta_day_short(day.date) %></b>
+      <span class="ta-day-hours"><%= ta_hours(total) %></span><% if day.target.to_f.positive? %><span class="ta-hint"> / <%= ta_hours(day.target) %> h</span><% end %>
+      <span class="ta-bar" aria-hidden="true"><i class="is-logged" style="width: <%= (day.logged_hours / scale * 100).round %>%"></i><i class="is-ready" style="width: <%= (day.ready_hours.to_f / scale * 100).round %>%"></i></span>
+      <span class="ta-day-state">
+        <% if day.open? %><%= l(:text_time_autopilot_day_questions, count: day.question_count) %>
+        <% elsif day.ready_hours.positive? %><%= l(:text_time_autopilot_day_ready, hours: ta_hours(day.ready_hours)) %>
+        <% elsif day.logged_hours.positive? %><%= l(:label_time_autopilot_day_booked) %>
+        <% elsif day.hours.positive? %><%= l(:label_time_autopilot_day_skipped) %>
+        <% end %>
+      </span>
+    </div>
+  <% end %>
+</div>
+<p class="ta-legend">
+  <span><i class="is-logged"></i><%= l(:text_time_autopilot_legend_logged, hours: ta_hours(week.logged_hours)) %></span>
+  <span><i class="is-ready"></i><%= l(:text_time_autopilot_legend_ready, hours: ta_hours(week.ready_hours)) %></span>
+  <% if week.target_hours.positive? %>
+    <span><%= l(:text_time_autopilot_legend_target, hours: ta_hours(week.target_hours)) %> · <%= link_to l(:label_time_autopilot_work_hours_own), my_account_path(anchor: 'ta-work-hours') %></span>
+  <% else %>
+    <span><%= link_to l(:text_time_autopilot_set_work_hours), my_account_path(anchor: 'ta-work-hours') %></span>
+  <% end %>
+</p>
+
+<div class="ta-split">
+  <%# ---- Links: was der Agent mitgeschrieben hat ---- %>
+  <section class="ta-agent">
+    <% if week.sources.any? %>
+      <% week.sources.each do |source| %>
+        <div class="ta-agent-head">
+          <span class="ta-agent-mark" aria-hidden="true">✳</span>
+          <div>
+            <b><%= l(:text_time_autopilot_recorded_by, source: source.name) %></b>
+            <span class="ta-hint"><%= l(:text_time_autopilot_source_meta, segments: source.segments, folders: source.folders,
+                                         uploaded: source.uploaded_at ? format_time(source.uploaded_at) : '–') %></span>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="ta-agent-body">
+        <% if week.questions.any? %>
+          <div class="ta-step-head">
+            <h3><span class="ta-step">1</span><%= l(:label_time_autopilot_questions) %></h3>
+            <span class="ta-hint"><%= l(:text_time_autopilot_week_questions, count: week.questions.size) %></span>
+          </div>
+          <p class="ta-desc ta-step-body"><%= l(:text_time_autopilot_questions_desc) %></p>
+          <div class="ta-questions ta-step-body">
+            <% week.questions.each do |question| %>
+              <% suggestions = week.suggestions_for(question) %>
+              <%= form_tag time_autopilot_answer_path(week: week.start.iso8601), class: 'ta-question' do %>
+                <%= hidden_field_tag :folder, question.folder, id: nil %>
+                <div class="ta-q-top">
+                  <span class="ta-q-title"><%= l(:text_time_autopilot_question, folder: question.folder) %></span>
+                  <span class="ta-q-hours"><%= ta_hours(question.hours) %> h · <%= question.dates.map { |date| ta_day_abbr(date.cwday) }.join(', ') %></span>
+                </div>
+                <% if question.summaries.any? %>
+                  <p class="ta-q-what"><%= question.summaries.first(3).join(' · ') %><% if question.summaries.size > 3 %> …<% end %></p>
+                <% end %>
+                <div class="ta-picks">
+                  <% suggestions.each_with_index do |issue, index| %>
+                    <label class="ta-pick"><%= radio_button_tag :choice, "issue-#{issue.id}", index.zero?, id: nil %> <%= ta_issue_label(issue) %> <small><%= issue.project.name %></small></label>
+                  <% end %>
+                  <label class="ta-pick"><%= radio_button_tag :choice, 'skip', false, id: nil %> <%= l(:label_time_autopilot_target_skip) %></label>
+                  <%# type=search: Redmines defaultFocus fokussiert nur type=text – sonst springt die Seite beim Laden zur ersten Frage %>
+                  <%= search_field_tag :issue_id, '', id: "ta-issue-#{question.folder.parameterize}", class: 'ta-search', size: 20, placeholder: l(:text_time_autopilot_issue_placeholder), 'aria-label': l(:field_issue), autocomplete: 'off', data: { 'ta-issue-search': time_autopilot_issues_path } %>
+                </div>
+                <div class="ta-q-foot">
+                  <label><%= check_box_tag :remember, '1', true, id: nil %> <%= l(:text_time_autopilot_remember) %></label>
+                  <%= submit_tag l(:button_time_autopilot_apply), name: nil, class: 'ta-btn ta-primary' %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        <% end %>
+
+        <div class="ta-step-head">
+          <h3><span class="ta-step"><%= week.questions.any? ? 2 : 1 %></span><%= l(:label_time_autopilot_ready) %></h3>
+          <span class="ta-hint"><%= ta_hours(week.ready_hours) %> h</span>
+        </div>
+        <% if week.entries.any? %>
+          <p class="ta-desc ta-step-body"><%= l(:text_time_autopilot_ready_desc) %></p>
+          <div class="ta-step-body">
+          <%= form_tag time_autopilot_book_path(week: week.start.iso8601), id: 'ta-book' do %>
+            <% week.entries_by_day.each do |date, entries| %>
+              <div class="ta-ready">
+                <div class="ta-ready-day"><span><%= ta_day_label(date) %></span><span><%= ta_hours(entries.sum(&:hours)) %> h</span></div>
+                <% entries.each do |entry| %>
+                  <div class="ta-entry">
+                    <span class="ta-entry-title">
+                      <%= entry.issue ? ta_issue_link(entry.issue) : entry.planned_subject %>
+                      <% if entry.project %><small>· <%= entry.project.name %></small><% end %>
+                      <% if entry.to_create? %><span class="ta-tag"><%= l(:label_time_autopilot_will_create) %></span><% end %>
+                    </span>
+                    <%= text_field_tag "hours[#{entry.key}]", ta_hours(entry.hours), id: nil, class: 'ta-entry-hours', inputmode: 'decimal', 'aria-label': l(:field_hours) %>
+                    <% if entry.comments.present? %><span class="ta-entry-comment"><%= entry.comments %></span><% end %>
+                    <span class="ta-entry-why"><%= ta_entry_origin(entry) %></span>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            <div class="ta-bookbar">
+              <span class="ta-hint"><%= l(:text_time_autopilot_book_hint) %></span>
+              <%= submit_tag l(:button_time_autopilot_book, hours: ta_hours(week.ready_hours)), name: nil, class: 'ta-btn ta-primary ta-big' %>
+            </div>
+          <% end %>
+          </div>
+        <% else %>
+          <p class="ta-desc ta-step-body"><%= week.questions.any? ? l(:text_time_autopilot_ready_after_questions) : l(:text_time_autopilot_nothing_ready) %></p>
+        <% end %>
+      </div>
+    <% else %>
+      <%# Noch nichts erfasst: erklären, wie die Automatik funktioniert %>
+      <div class="ta-how">
+        <h3><%= l(:label_time_autopilot_how_title) %></h3>
+        <ol>
+          <li><%= t(:text_time_autopilot_how_1_html) %></li>
+          <li><%= t(:text_time_autopilot_how_2_html) %></li>
+          <li><%= t(:text_time_autopilot_how_3_html) %></li>
+        </ol>
+        <p class="ta-hint"><%= l(:text_time_autopilot_how_to_upload) %></p>
+      </div>
+    <% end %>
+  </section>
+
+  <%# ---- Rechts: selbst nachtragen, schon gebucht ---- %>
+  <aside class="ta-side">
+    <div class="ta-side-box ta-side-entry">
+      <%= render partial: 'my/blocks/quick_time_entry',
+                 locals: { user: User.current, block: 'ta-side-entry', settings: {},
+                           title: l(:label_time_autopilot_self_entry), intro: l(:text_time_autopilot_self_entry_desc) } %>
+    </div>
+    <div class="ta-side-box">
+      <div class="ta-side-head"><h3><%= l(:label_time_autopilot_logged) %></h3><b><%= ta_hours(week.logged_hours) %> h</b></div>
+      <% if week.time_entries.any? %>
+        <ul class="ta-logged">
+          <% week.time_entries.first(8).each do |entry| %>
+            <li>
+              <span class="ta-hint"><%= ta_day_abbr(entry.spent_on.cwday) %></span>
+              <span class="ta-logged-title"><%= link_to(entry.issue ? ta_issue_label(entry.issue) : entry.project.name, edit_time_entry_path(entry), title: entry.comments) %></span>
+              <span class="ta-logged-hours"><%= ta_hours(entry.hours) %></span>
+            </li>
+          <% end %>
+          <% if week.time_entries.size > 8 %>
+            <li class="ta-hint"><span></span><span><%= l(:text_time_autopilot_more, count: week.time_entries.size - 8) %></span><span class="ta-logged-hours"><%= ta_hours(week.time_entries.drop(8).sum(&:hours)) %></span></li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="ta-hint"><%= l(:text_time_autopilot_nothing_logged) %></p>
+      <% end %>
+      <%= link_to l(:label_time_autopilot_all_entries),
+                  time_entries_path(set_filter: 1, f: %w[spent_on user_id], op: { spent_on: '><', user_id: '=' },
+                                    v: { spent_on: [week.start.iso8601, week.finish.iso8601], user_id: ['me'] }),
+                  class: 'ta-side-link' %>
+    </div>
+  </aside>
+</div>
