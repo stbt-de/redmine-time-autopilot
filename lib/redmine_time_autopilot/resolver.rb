@@ -89,7 +89,7 @@ module RedmineTimeAutopilot
         issue = finder.find(date)
         if issue
           Resolution.new(kind: :monthly, issue: issue, rule: rule)
-        elsif rule.create_missing && rule.project
+        elsif rule.create_missing && rule.project && !finder.closed_for?(date)
           Resolution.new(kind: :monthly, rule: rule, planned_subject: finder.planned_subject(date),
                          month: date.beginning_of_month)
         else

@@ -1,15 +1,14 @@
 # frozen_string_literal: true
 
 module RedmineTimeAutopilot
-  # Das Ticket des Monats einer Zuordnung, z. B. „Wartung November 2026“.
+  # Das Ticket des Monats einer Zuordnung, z. B. „Nordlicht - 2026 - November“.
   #
-  # Gefunden wird ein offenes Ticket im Projekt, dessen Betreff den Begriff
-  # enthält und das am Tag läuft: Beginn und Abgabedatum umfassen den Tag,
-  # oder – ohne Daten – der Betreff nennt den Monat („November 2026“).
-  # Fehlt es, kann es aus dem Ticket des Vormonats angelegt werden.
+  # Der Betreff kommt aus der Vorlage der Zuordnung (SubjectTemplate). Gefunden
+  # wird das offene Ticket im Projekt mit genau diesem Betreff – oder eines,
+  # dessen Betreff zur Vorlage passt und dessen Beginn und Abgabedatum den Tag
+  # umfassen. Fehlt es, kann es angelegt werden; Tracker, Zuweisung,
+  # Beschreibung und Schätzung kommen dann vom Ticket des Vormonats.
   class MonthlyIssue
-    LOCALES = %i[de en].freeze
-
     attr_reader :rule
 
     def initialize(user, rule)
@@ -21,30 +20,31 @@ module RedmineTimeAutopilot
       rule.project
     end
 
+    def template
+      @template ||= SubjectTemplate.new(rule.subject_template, project: project, locale: rule.month_locale)
+    end
+
     def find(date)
-      candidates.reject(&:closed?).select { |issue| covers?(issue, date) }
-                .max_by { |issue| [issue.start_date || Date.new(1970), issue.id] }
+      open = candidates.reject(&:closed?)
+      open.detect { |issue| template.same?(issue.subject, date) } ||
+        open.select { |issue| runs_on?(issue, date) && template.matches?(issue.subject) }.max_by(&:id)
     end
 
-    # Letztes Ticket vor dem Monat: Vorlage für das neue
-    def template_for(date)
-      first = date.beginning_of_month
-      candidates.select { |issue| (issue.start_date || issue.created_on.to_date) < first }
-                .max_by { |issue| [issue.start_date || issue.created_on.to_date, issue.id] }
+    # Ticket des Monats gibt es, ist aber geschlossen – dann kein zweites anlegen
+    def closed_for?(date)
+      candidates.any? { |issue| issue.closed? && template.same?(issue.subject, date) }
     end
 
-    # Betreff des neuen Tickets: der Vormonat im Betreff wird ersetzt
-    # („Wartung Oktober 2026“ → „Wartung November 2026“), sonst angehängt
     def planned_subject(date)
-      base = template_for(date)&.subject || rule.subject_term.to_s
-      LOCALES.each do |locale|
-        names = month_names(locale)
-        pattern = /\b(#{names.map { |name| Regexp.escape(name) }.join('|')})(\s+)(\d{4})\b/i
-        next unless base.match?(pattern)
+      template.render(date)
+    end
 
-        return base.sub(pattern) { "#{names[date.month - 1]}#{Regexp.last_match(2)}#{date.year}" }
-      end
-      "#{base} #{month_names(default_locale)[date.month - 1]} #{date.year}".strip
+    # Vorlage für das neue Ticket: das des Vormonats, sonst das letzte
+    # Monatsticket davor
+    def template_for(date)
+      candidates.detect { |issue| template.same?(issue.subject, date.prev_month) } ||
+        candidates.select { |issue| template.matches?(issue.subject) && started(issue) < date.beginning_of_month }
+                  .max_by { |issue| [started(issue), issue.id] }
     end
 
     def can_create?
@@ -56,11 +56,11 @@ module RedmineTimeAutopilot
     def create!(date)
       raise BookingError, ::I18n.t(:error_time_autopilot_cannot_create_issue, project: project&.name.to_s) unless can_create?
 
-      template = template_for(date)
+      previous = template_for(date)
       issue = Issue.new
-      issue.copy_from(template, attachments: false, subtasks: false, watchers: false, link: false) if template
+      issue.copy_from(previous, attachments: false, subtasks: false, watchers: false, link: false) if previous
       issue.project = project
-      issue.tracker = template&.tracker || project.trackers.sorted.first
+      issue.tracker = previous&.tracker || project.trackers.sorted.first
       issue.author = @user
       issue.subject = planned_subject(date)
       issue.start_date = date.beginning_of_month
@@ -68,9 +68,10 @@ module RedmineTimeAutopilot
       issue.status = issue.tracker.default_status
       issue.done_ratio = 0
       issue.priority ||= IssuePriority.default || IssuePriority.active.first
-      issue.parent_issue_id = template&.parent_id
+      issue.parent_issue_id = previous&.parent_id
       issue.save!
-      close(template) if rule.close_previous && template && !template.closed?
+      close(previous) if rule.close_previous && previous && !previous.closed?
+      @candidates = nil
       issue
     end
 
@@ -78,43 +79,28 @@ module RedmineTimeAutopilot
 
     def candidates
       @candidates ||= begin
-        term = rule.subject_term.to_s.strip.downcase
         scope = Issue.visible(@user).where(project_id: rule.project_id)
-        scope = scope.where('LOWER(subject) LIKE ?', "%#{Issue.sanitize_sql_like(term)}%") if term.present?
+        fixed = template.fixed_part.downcase
+        scope = scope.where('LOWER(subject) LIKE ?', "%#{Issue.sanitize_sql_like(fixed)}%") if fixed.present?
         scope.includes(:status).to_a
       end
     end
 
-    def covers?(issue, date)
-      if issue.start_date && issue.due_date
-        (issue.start_date..issue.due_date).cover?(date)
-      else
-        names_month?(issue.subject, date)
-      end
+    def runs_on?(issue, date)
+      issue.start_date && issue.due_date && (issue.start_date..issue.due_date).cover?(date)
     end
 
-    def names_month?(subject, date)
-      LOCALES.any? do |locale|
-        subject.match?(/\b#{Regexp.escape(month_names(locale)[date.month - 1])}\s+#{date.year}\b/i)
-      end || subject.match?(/\b(#{date.year}-#{format('%02d', date.month)}|#{format('%02d', date.month)}\/#{date.year})\b/)
+    def started(issue)
+      issue.start_date || issue.created_on.to_date
     end
 
-    def month_names(locale)
-      ::I18n.t('date.month_names', locale: locale).compact
-    end
-
-    def default_locale
-      locale = Setting.default_language.to_s.split('-').first&.to_sym
-      LOCALES.include?(locale) ? locale : :en
-    end
-
-    def close(template)
-      status = template.new_statuses_allowed_to(@user).detect(&:is_closed?)
+    def close(previous)
+      status = previous.new_statuses_allowed_to(@user).detect(&:is_closed?)
       return unless status
 
-      template.init_journal(@user)
-      template.status = status
-      template.save
+      previous.init_journal(@user)
+      previous.status = status
+      previous.save
     end
   end
 end

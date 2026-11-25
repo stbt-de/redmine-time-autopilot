@@ -52,6 +52,55 @@
     }
   }
 
+  // Ticket des Monats: Platzhalter einfügen, Betreff der Vorschau mitführen
+  function initSubjectTemplate(form) {
+    var input = form.querySelector('[data-ta-template]');
+    var preview = form.querySelector('[data-ta-preview]');
+    if (!input || !preview) return;
+    var data = JSON.parse(preview.getAttribute('data-ta-preview'));
+    var locale = form.querySelector('[data-ta-month-locale]');
+    var project = form.querySelector('select[name="rule[project_id]"]');
+
+    function render() {
+      var names = data.months[(locale && locale.value) || data.default_locale] || data.months.en || [];
+      var projectName = (project && data.projects[project.value]) || '';
+      preview.querySelectorAll('li').forEach(function (row) {
+        var month = parseInt(row.getAttribute('data-month'), 10);
+        var subject = input.value.replace(/\{(\w+)\}/g, function (all, name) {
+          if (name === 'project') return projectName;
+          if (name === 'year') return row.getAttribute('data-year');
+          if (name === 'month') return names[month - 1] || '';
+          if (name === 'month_number') return (month < 10 ? '0' : '') + month;
+          return all;
+        }).replace(/\s+/g, ' ').trim();
+        row.querySelector('.ta-preview-subject').textContent = subject;
+      });
+    }
+
+    // Stand aus der Datenbank gilt nur für die gespeicherte Vorlage
+    function changed() {
+      preview.querySelectorAll('.ta-preview-status').forEach(function (status) { status.hidden = true; });
+      render();
+    }
+
+    form.querySelectorAll('[data-ta-insert]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        var text = button.getAttribute('data-ta-insert');
+        var start = input.selectionStart == null ? input.value.length : input.selectionStart;
+        var end = input.selectionEnd == null ? start : input.selectionEnd;
+        input.value = input.value.slice(0, start) + text + input.value.slice(end);
+        input.focus();
+        input.setSelectionRange(start + text.length, start + text.length);
+        changed();
+      });
+    });
+    [input, locale, project].forEach(function (field) {
+      if (field) field.addEventListener('input', changed);
+      if (field) field.addEventListener('change', changed);
+    });
+    render();
+  }
+
   function init() {
     undoDefaultFocus();
     document.querySelectorAll('[data-ta-issue-search]').forEach(initIssueSearch);
@@ -61,6 +110,7 @@
         field.addEventListener('change', function () { update(form); });
       });
       update(form);
+      initSubjectTemplate(form);
     });
   }
 

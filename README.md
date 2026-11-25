@@ -16,13 +16,21 @@ click. Nothing is booked without you.
   the answer into a rule, which applies immediately to every open draft.
 - **Rules as sentences** – *Work in `shop` and `shop-cms` goes to the issue of the month
   (Maintenance)*, *except files under `www/src/Jobs` → #4630*. The most specific rule
-  wins: an issue number in the work itself (`#123` in the branch or a commit message),
-  then files, branch, word, and finally the folder default.
-- **Issue of the month** – recurring budgets like monthly maintenance: the open issue
-  with the word in its subject that runs in the given month (start to due date, otherwise
-  the month in the subject, *November 2026*). If it is missing it is created when booking,
-  as a copy of the previous month's issue (subject with the new month, assignee,
-  estimate, parent; runs the whole month), optionally closing the previous one.
+  wins: an issue number in the work itself (in the branch, `feature/123-…`, or in a
+  commit message with `refs #123` / `fixes #123`), then files, branch, word, and finally
+  the folder default.
+- **Issue of the month** – recurring budgets like monthly maintenance. The subject comes
+  from a template with placeholders – `{project}`, `{year}`, `{month}`, `{month_number}` –
+  e.g. `Maintenance - {year} - {month}` → *Maintenance - 2026 - November*. The default
+  template is set under *Administration → Plugins → Time Autopilot*
+  (`{project} - {year} - {month}`); each rule can change it. Month names come from
+  Redmine's own language files, in Redmine's default language or one chosen per rule, so
+  every language Redmine ships works; `{month_number}` avoids names altogether. Time
+  Autopilot finds the open issue with exactly this subject (or a matching one that runs in
+  the month). If it is missing it is created when booking: subject from the template,
+  runs the whole month, tracker, assignee, description and estimate from the previous
+  month's issue; optionally closing that one. If the month's issue exists but is closed,
+  the entries stay open instead of creating a second one.
 - **Regular time entries** – booking creates normal Redmine time entries with
   Redmine's permissions (*Log spent time*, *Add issues* for monthly issues). Anything that
   fails stays a draft and is reported.
@@ -54,6 +62,8 @@ drafts are per person.
 | Rules | Working hours (My account) |
 | --- | --- |
 | ![Rules as sentences](docs/screenshots/rules.png) | ![Working hours per weekday](docs/screenshots/working-hours.png) |
+
+![Issue of the month: subject template with placeholders, preview of the next months](docs/screenshots/monthly-rule.png)
 
 | Log time (My page) | Weekly hours (My page) | Mobile |
 | --- | --- | --- |
@@ -112,9 +122,9 @@ Redmine's permissions:
 **MCP:** with [redmine_mcp_plugin](https://github.com/joaoperfig/redmine_mcp_plugin)
 (Redmine 6.1 or later) installed, Time Autopilot adds its tools to that plugin's MCP
 endpoint: `time_week`, `time_answer`, `time_book`, `time_upload`, `time_rules`,
-`time_search_issues`. No second MCP server and no second key – they run as the signed-in
+`time_save_rule`, `time_delete_rule`, `time_search_issues`. No second MCP server and no second key – they run as the signed-in
 user, need *Log spent time*, and follow the MCP plugin's OAuth scopes. The writing tools
-(`time_answer`, `time_book`, `time_upload`) only appear when the MCP plugin is not in
+(`time_answer`, `time_book`, `time_upload`, `time_save_rule`, `time_delete_rule`) only appear when the MCP plugin is not in
 read-only mode; `time_book` is described so that agents only call it after an explicit
 okay. An agent can then show the week in a chat, take the answers and book.
 

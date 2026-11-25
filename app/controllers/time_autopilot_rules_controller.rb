@@ -25,12 +25,13 @@ class TimeAutopilotRulesController < ApplicationController
 
   def new
     @rule = TimeAutopilotRule.new(user: User.current, kind: params[:kind].presence_in(TimeAutopilotRule::KINDS) || 'folder',
-                                  folders: params[:folders], target: params[:target].presence_in(TimeAutopilotRule::TARGETS) || 'issue')
+                                  folders: params[:folders], target: params[:target].presence_in(TimeAutopilotRule::TARGETS) || 'issue',
+                                  subject_template: RedmineTimeAutopilot::SubjectTemplate.default)
   end
 
   def create
     @rule = TimeAutopilotRule.new(user: User.current)
-    if assign && @rule.save
+    if save_rule
       flash[:notice] = l(:notice_successful_create)
       redirect_to time_autopilot_rules_path
     else
@@ -41,7 +42,7 @@ class TimeAutopilotRulesController < ApplicationController
   def edit; end
 
   def update
-    if assign && @rule.save
+    if save_rule
       flash[:notice] = l(:notice_successful_update)
       redirect_to time_autopilot_rules_path
     else
@@ -66,28 +67,16 @@ class TimeAutopilotRulesController < ApplicationController
     render_404 unless @rule
   end
 
-  def assign
-    values = params.require(:rule).permit(:folders, :kind, :pattern, :target, :issue_id, :project_id, :subject_term,
-                                          :create_missing, :close_previous, :activity_id)
-    @rule.attributes = values.except(:issue_id, :project_id, :activity_id)
-    @rule.issue = values[:issue_id].present? ? Issue.visible.find_by(id: values[:issue_id].to_s[/\d+/]) : nil
-    @rule.project = values[:project_id].present? ? Project.allowed_to(User.current, :log_time).find_by(id: values[:project_id]) : nil
-    @rule.activity_id = TimeEntryActivity.shared.active.find_by(id: values[:activity_id])&.id
-    @rule.issue_id = nil unless @rule.target == 'issue'
-    @rule.project_id = @rule.subject_term = nil unless @rule.monthly?
-    if @rule.target == 'issue' && values[:issue_id].present? && (@rule.issue.nil? || !User.current.allowed_to?(:log_time, @rule.issue.project))
-      @rule.valid?
-      @rule.errors.add(:issue_id, :invalid)
-      return false
-    end
-    true
+  def save_rule
+    values = params.require(:rule).permit(*RedmineTimeAutopilot::RuleEditor::FIELDS)
+    RedmineTimeAutopilot::RuleEditor.new(User.current, @rule).save(values.to_h)
   end
 
   def rule_json(rule)
     {
       id: rule.id, folders: rule.folder_list, kind: rule.kind, pattern: rule.pattern, target: rule.target,
       issue: rule.issue && { id: rule.issue.id, subject: rule.issue.subject },
-      project: rule.project&.name, subject_term: rule.subject_term,
+      project: rule.project&.name, subject_template: rule.subject_template, month_locale: rule.month_locale,
       create_missing: rule.create_missing, close_previous: rule.close_previous,
       sentence: view_context.strip_tags("#{view_context.ta_rule_condition(rule)} → #{view_context.ta_rule_target(rule)}").squish
     }

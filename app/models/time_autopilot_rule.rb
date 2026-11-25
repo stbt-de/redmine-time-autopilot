@@ -18,8 +18,10 @@ class TimeAutopilotRule < ApplicationRecord
   validates :target, inclusion: { in: TARGETS }
   validates :pattern, presence: true, if: :exception?
   validates :issue_id, presence: true, if: -> { target == 'issue' }
-  validates :project_id, :subject_term, presence: true, if: -> { target == 'monthly' }
+  validates :project_id, :subject_template, presence: true, if: -> { target == 'monthly' }
+  validates :month_locale, inclusion: { in: ->(_rule) { ::I18n.available_locales.map(&:to_s) } }, allow_blank: true
   validate :folders_for_default
+  validate :valid_subject_template, if: -> { target == 'monthly' && subject_template.present? }
 
   scope :for_user, ->(user) { where(user_id: user.id) }
 
@@ -47,6 +49,10 @@ class TimeAutopilotRule < ApplicationRecord
     target == 'monthly'
   end
 
+  def subject(date)
+    RedmineTimeAutopilot::SubjectTemplate.new(subject_template, project: project, locale: month_locale).render(date)
+  end
+
   def applies_to_folder?(folder)
     list = folder_list
     list.empty? ? exception? : list.include?(folder)
@@ -65,6 +71,15 @@ class TimeAutopilotRule < ApplicationRecord
   end
 
   private
+
+  def valid_subject_template
+    template = RedmineTimeAutopilot::SubjectTemplate.new(subject_template)
+    if template.unknown_placeholders.any?
+      errors.add(:subject_template, ::I18n.t(:error_time_autopilot_unknown_placeholder, names: template.unknown_placeholders.map { |name| "{#{name}}" }.join(', ')))
+    elsif !template.names_month?
+      errors.add(:subject_template, ::I18n.t(:error_time_autopilot_template_without_month))
+    end
+  end
 
   # Ohne Platzhalter: der Ordner und alles darunter („www/src/Jobs“);
   # „…/**“ ebenso; sonst Muster, bei dem * auch über / hinweg passt

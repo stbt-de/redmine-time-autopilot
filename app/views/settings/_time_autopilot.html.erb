@@ -1,0 +1,6 @@
+<%# Administration → Plugins → Time Autopilot %>
+<p>
+  <label for="settings_subject_template"><%= l(:field_time_autopilot_default_subject_template) %></label>
+  <%= text_field_tag 'settings[subject_template]', @settings['subject_template'], id: 'settings_subject_template', size: 40 %>
+  <em class="info"><%= t(:text_time_autopilot_placeholders_html) %></em>
+</p>

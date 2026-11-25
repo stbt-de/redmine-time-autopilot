@@ -56,7 +56,7 @@ class McpToolsTest < ActiveSupport::TestCase
 
     names = tool_names(@jsmith)
     assert_includes names, 'get_issue' # die eigenen des MCP-Plugins bleiben
-    %w[time_week time_answer time_book time_upload time_rules time_search_issues].each { |name| assert_includes names, name }
+    %w[time_week time_answer time_book time_upload time_rules time_save_rule time_delete_rule time_search_issues].each { |name| assert_includes names, name }
   end
 
   def test_nur_lesen_blendet_schreibende_aus
@@ -68,6 +68,7 @@ class McpToolsTest < ActiveSupport::TestCase
     assert_includes names, 'time_week'
     assert_not_includes names, 'time_book'
     assert_not_includes names, 'time_answer'
+    assert_not_includes names, 'time_save_rule'
   end
 
   # Regression: permission :log_time stand nur an der Basisklasse; die DSL
@@ -108,6 +109,38 @@ class McpToolsTest < ActiveSupport::TestCase
     create_draft(folder: 'monitor')
     result = call(@jsmith, 'time_answer', 'week' => MONDAY.iso8601, 'folder' => 'monitor', 'issue_id' => hidden_issue.id)
     assert result[:isError]
+  end
+
+  def test_zuordnung_mit_ticket_des_monats_speichern_und_loeschen
+    skip 'ohne redmine_mcp_plugin' unless MCP_INSTALLED
+
+    saved = call(@jsmith, 'time_save_rule', 'folders' => ['shop'], 'kind' => 'folder', 'target' => 'monthly',
+                                            'project' => @project.identifier, 'subject_template' => 'Shop - {year} - {month}',
+                                            'month_locale' => 'de')
+    assert_not saved[:isError], saved.inspect
+    rule = saved[:structuredContent]
+    assert_equal 'Shop - {year} - {month}', rule[:subject_template]
+    assert_match(/\AShop - \d{4} - \S+\z/, rule[:months].first[:subject])
+
+    changed = call(@jsmith, 'time_save_rule', 'id' => rule[:id], 'close_previous' => true)[:structuredContent]
+    assert_equal ['Shop - {year} - {month}', true], [changed[:subject_template], changed[:close_previous]]
+    assert_equal [rule[:id]], call(@jsmith, 'time_rules')[:structuredContent][:rules].map { |r| r[:id] }
+
+    assert_equal({ deleted: rule[:id] }, call(@jsmith, 'time_delete_rule', 'id' => rule[:id])[:structuredContent])
+    assert_equal 0, TimeAutopilotRule.count
+  end
+
+  def test_zuordnung_ohne_recht_aufs_projekt_wird_abgelehnt
+    skip 'ohne redmine_mcp_plugin' unless MCP_INSTALLED
+
+    result = call(@jsmith, 'time_save_rule', 'folders' => ['shop'], 'kind' => 'folder', 'target' => 'issue', 'issue_id' => hidden_issue.id)
+    assert result[:isError]
+    result = call(@jsmith, 'time_save_rule', 'folders' => ['shop'], 'kind' => 'folder', 'target' => 'monthly',
+                                             'project' => @project.identifier, 'subject_template' => 'Shop {year}')
+    assert result[:isError]
+    assert_equal 0, TimeAutopilotRule.count
+    other = create_rule(user: @dlopper, target: 'skip')
+    assert call(@jsmith, 'time_delete_rule', 'id' => other.id)[:isError]
   end
 
   def test_suche_und_zuordnungen

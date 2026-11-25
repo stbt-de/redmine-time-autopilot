@@ -148,6 +148,18 @@ input[type=search].ta-search, input[type=search].ta-issue-search { -webkit-appea
 .ta-preview li:first-child { border-top: 0; }
 .ta-preview li span:first-child { white-space: nowrap; }
 .ta-preview li span:last-child { text-align: right; }
+.ta-preview-subject { font-weight: 600; }
+/* Checkbox mit Text: Umbruch bündig unter dem Text, erste Zeile auf Höhe des Labels */
+.ta-rule-form .ta-check { display: inline-flex; align-items: flex-start; gap: 8px; vertical-align: top; max-width: 100%; }
+.ta-rule-form .ta-check input[type=checkbox] { flex: none; margin: 0.2em 0 0; }
+/* Label der Zeile ohne den Abstand für Eingabefelder – sonst tiefer als die erste Textzeile */
+.ta-rule-form.tabular p:has(> .ta-check) > label { padding-top: 0; line-height: inherit; }
+.ta-rule-form.tabular .ta-check label { float: none; width: auto; margin: 0; padding: 0; text-align: left; font-weight: normal; line-height: inherit; }
+/* Platzhalter fürs Ticket des Monats: unter dem Feld, zum Einfügen */
+.ta-placeholders { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.ta-placeholder { font: inherit; font-size: 0.9em; line-height: 1.4; padding: 2px 10px; cursor: pointer;
+  color: var(--ta-text); background: var(--ta-bg-muted); border: 1px solid var(--ta-border); border-radius: 999px; }
+.ta-placeholder:hover { border-color: var(--ta-border-strong); }
 [data-ta-show][hidden] { display: none !important; }
 
 @media (max-width: 899px) {

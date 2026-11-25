@@ -85,12 +85,18 @@ class TimeAutopilotTest < Redmine::IntegrationTest
     get '/time_autopilot/rules/new?folders=shop'
     assert_response :success
     assert_select 'textarea[name="rule[folders]"]', text: /shop/
+    # Grundstruktur aus der Plugin-Konfiguration, Platzhalter zum Einfügen
+    assert_select 'input[name="rule[subject_template]"][value=?]', '{project} - {year} - {month}'
+    assert_select 'button[data-ta-insert="{month}"]'
+    assert_select 'select[name="rule[month_locale]"] option[value=""]'
 
     post '/time_autopilot/rules', params: { rule: { folders: "shop\nwebsite", kind: 'folder', target: 'monthly',
-                                                    project_id: @project.id, subject_term: 'Wartung', create_missing: '1' } }
+                                                    project_id: @project.id, subject_template: 'Wartung - {year} - {month}',
+                                                    month_locale: 'de', create_missing: '1' } }
     assert_redirected_to '/time_autopilot/rules'
     rule = TimeAutopilotRule.sole
     assert_equal [%w[shop website], 'monthly', @project], [rule.folder_list, rule.target, rule.project]
+    assert_equal ['Wartung - {year} - {month}', 'de'], [rule.subject_template, rule.month_locale]
 
     get '/time_autopilot/rules'
     assert_select '.ta-rule b', text: 'website'
@@ -100,9 +106,29 @@ class TimeAutopilotTest < Redmine::IntegrationTest
     patch "/time_autopilot/rules/#{rule.id}", params: { rule: { target: 'skip' } }
     assert rule.reload.skip?
     assert_nil rule.project_id
+    assert_nil rule.subject_template
 
     delete "/time_autopilot/rules/#{rule.id}"
     assert_equal 0, TimeAutopilotRule.count
+  end
+
+  def test_vorlage_ohne_monat_wird_abgelehnt
+    log_user('jsmith', 'jsmith')
+    post '/time_autopilot/rules', params: { rule: { folders: 'shop', kind: 'folder', target: 'monthly',
+                                                    project_id: @project.id, subject_template: 'Wartung {year}' } }
+    assert_response 422
+    assert_select '#errorExplanation', text: /\{month\}/
+    assert_equal 0, TimeAutopilotRule.count
+  end
+
+  def test_standardvorlage_in_der_plugin_konfiguration
+    log_user('admin', 'admin')
+    get '/settings/plugin/redmine_time_autopilot'
+    assert_response :success
+    assert_select 'input[name="settings[subject_template]"][value=?]', '{project} - {year} - {month}'
+    with_settings plugin_redmine_time_autopilot: { 'subject_template' => 'Betrieb {month_number}/{year}' } do
+      assert_equal 'Betrieb {month_number}/{year}', RedmineTimeAutopilot::SubjectTemplate.default
+    end
   end
 
   def test_fremde_zuordnung_nicht_erreichbar

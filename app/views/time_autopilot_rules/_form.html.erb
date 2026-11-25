@@ -30,31 +30,42 @@
       <%= f.select :project_id, Project.allowed_to(User.current, :log_time).sorted.map { |project| [project.name, project.id] }, include_blank: true %>
     </p>
     <p data-ta-show="target:monthly">
-      <%= f.label :subject_term, l(:field_time_autopilot_subject_term) %>
-      <%= f.text_field :subject_term, size: 20, placeholder: l(:text_time_autopilot_subject_term_placeholder) %>
+      <%= f.label :subject_template, l(:field_time_autopilot_subject_template) %>
+      <%= f.text_field :subject_template, size: 40, data: { 'ta-template': true } %>
+      <span class="ta-placeholders">
+        <% RedmineTimeAutopilot::SubjectTemplate::PLACEHOLDERS.each do |name| %>
+          <button type="button" class="ta-placeholder" data-ta-insert="{<%= name %>}" title="{<%= name %>}"><%= l("label_time_autopilot_placeholder_#{name}") %></button>
+        <% end %>
+      </span>
       <em class="info"><%= l(:text_time_autopilot_monthly_info) %></em>
     </p>
     <p data-ta-show="target:monthly">
-      <label><%= l(:field_time_autopilot_create_missing) %></label>
-      <%= f.check_box :create_missing %> <%= l(:text_time_autopilot_create_missing) %>
+      <%= f.label :month_locale, l(:field_time_autopilot_month_locale) %>
+      <%= f.select :month_locale, ta_month_locale_options, {}, data: { 'ta-month-locale': true } %>
     </p>
     <p data-ta-show="target:monthly">
-      <label><%= l(:field_time_autopilot_close_previous) %></label>
-      <%= f.check_box :close_previous %> <%= l(:text_time_autopilot_close_previous) %>
+      <label for="rule_create_missing"><%= l(:field_time_autopilot_create_missing) %></label>
+      <span class="ta-check"><%= f.check_box :create_missing %><label for="rule_create_missing"><%= l(:text_time_autopilot_create_missing) %></label></span>
+    </p>
+    <p data-ta-show="target:monthly">
+      <label for="rule_close_previous"><%= l(:field_time_autopilot_close_previous) %></label>
+      <span class="ta-check"><%= f.check_box :close_previous %><label for="rule_close_previous"><%= l(:text_time_autopilot_close_previous) %></label></span>
     </p>
     <p data-ta-show="target:issue,monthly">
       <%= f.label :activity_id, l(:field_activity) %>
       <%= f.select :activity_id, TimeEntryActivity.shared.active.sorted.map { |activity| [activity.name, activity.id] }, include_blank: l(:text_time_autopilot_activity_default) %>
     </p>
   </div>
-  <% if rule.persisted? && rule.monthly? && rule.project %>
-    <div class="ta-preview">
-      <h3><%= l(:label_time_autopilot_preview) %></h3>
-      <ul>
-        <% ta_monthly_preview(rule).each do |month, label, found| %>
-          <li><span><%= month %></span><span class="<%= 'ta-hint' unless found %>"><%= label %></span></li>
-        <% end %>
-      </ul>
-    </div>
-  <% end %>
+  <div class="ta-preview" data-ta-show="target:monthly" data-ta-preview="<%= ta_monthly_preview_data.to_json %>">
+    <h3><%= l(:label_time_autopilot_preview) %></h3>
+    <ul>
+      <% ta_monthly_preview(rule).each do |preview| %>
+        <li data-year="<%= preview[:year] %>" data-month="<%= preview[:month] %>">
+          <span><%= preview[:label] %></span>
+          <span><span class="ta-preview-subject"><%= preview[:subject] %></span>
+            <% if preview[:status] %><br><span class="ta-hint ta-preview-status"><%= preview[:status] %></span><% end %></span>
+        </li>
+      <% end %>
+    </ul>
+  </div>
 </div>

@@ -42,6 +42,21 @@ module TimeAutopilotMcp
       def week_payload(week)
         RedmineTimeAutopilot::WeekPayload.new(week, texts).to_h
       end
+
+      def rule_payload(rule)
+        payload = { id: rule.id, folders: rule.folder_list, kind: rule.kind, pattern: rule.pattern, target: rule.target,
+                    issue: rule.issue && { id: rule.issue.id, subject: rule.issue.subject } }
+        return payload unless rule.monthly?
+
+        finder = RedmineTimeAutopilot::MonthlyIssue.new(user, rule)
+        months = [user.today, user.today.next_month].map do |date|
+          issue = finder.find(date)
+          { month: date.strftime('%Y-%m'), subject: finder.planned_subject(date), issue: issue && { id: issue.id, subject: issue.subject } }
+        end
+        payload.merge(project: rule.project && { id: rule.project.id, identifier: rule.project.identifier, name: rule.project.name },
+                      subject_template: rule.subject_template, month_locale: rule.month_locale,
+                      create_missing: rule.create_missing, close_previous: rule.close_previous, months: months)
+      end
     end
 
     class TimeWeek < Base
@@ -173,7 +188,8 @@ module TimeAutopilotMcp
       tool_name 'time_rules'
       title 'Time: show rules'
       description 'Time Autopilot: the user\'s rules (which folder, files, branch or word goes to which issue, the issue ' \
-                  'of the month, or not booked) and folders without a rule from the last four weeks.'
+                  'of the month, or not booked) and folders without a rule from the last four weeks. Monthly rules show ' \
+                  'their subject template and the subject and issue of this and the next month.'
       input_schema('type' => 'object', 'properties' => {}, 'additionalProperties' => false)
 
       private
@@ -184,13 +200,81 @@ module TimeAutopilotMcp
         unassigned = TimeAutopilotDraft.for_user(user).where(spent_on: (user.today - 28)..user.today)
                                        .where.not(folder: assigned).group(:folder).sum(:hours)
         {
-          rules: rules.map do |rule|
-            { id: rule.id, folders: rule.folder_list, kind: rule.kind, pattern: rule.pattern, target: rule.target,
-              issue: rule.issue && { id: rule.issue.id, subject: rule.issue.subject },
-              project: rule.project&.name, subject_term: rule.subject_term }
-          end,
-          unassigned: unassigned.map { |folder, hours| { folder: folder, hours_last_4_weeks: hours.to_f } }
+          rules: rules.map { |rule| rule_payload(rule) },
+          unassigned: unassigned.map { |folder, hours| { folder: folder, hours_last_4_weeks: hours.to_f } },
+          default_subject_template: RedmineTimeAutopilot::SubjectTemplate.default
         }
+      end
+    end
+
+    RULE_PROPERTIES = {
+      'folders' => { 'type' => 'array', 'items' => { 'type' => 'string' },
+                     'description' => 'Project folder names. Required for kind folder; for exceptions empty = every folder.' },
+      'kind' => { 'type' => 'string', 'enum' => TimeAutopilotRule::KINDS,
+                  'description' => 'folder = default for the folders; path, branch, term = exception, checked first.' },
+      'pattern' => { 'type' => 'string',
+                     'description' => 'For path (a folder like www/src/Jobs or a glob), branch (e.g. feature/*) or term ' \
+                                      '(word in summary, branch or paths).' },
+      'target' => { 'type' => 'string', 'enum' => TimeAutopilotRule::TARGETS,
+                    'description' => 'issue = fixed issue, monthly = issue of the month in a project, skip = not booked.' },
+      'issue_id' => { 'type' => 'integer', 'description' => 'For target issue.' },
+      'project' => { 'type' => %w[string integer], 'description' => 'For target monthly: project identifier or id.' },
+      'subject_template' => { 'type' => 'string',
+                              'description' => 'For target monthly: subject with {project}, {year}, {month}, {month_number}, ' \
+                                               'e.g. "Maintenance - {year} - {month}". Omitted: the default from the plugin settings.' },
+      'month_locale' => { 'type' => 'string', 'description' => 'Language of {month}, e.g. de, en, fr. Omitted: Redmine\'s default language.' },
+      'create_missing' => { 'type' => 'boolean', 'description' => 'Create the issue of the month when booking. Defaults to true.' },
+      'close_previous' => { 'type' => 'boolean', 'description' => 'Close the previous month\'s issue when creating. Defaults to false.' }
+    }.freeze
+
+    class TimeSaveRule < Base
+      tool_name 'time_save_rule'
+      title 'Time: save rule'
+      description 'Time Autopilot: creates a rule, or changes one (with id; only the given fields change). Only with the ' \
+                  'user\'s decision – never guess where work belongs. Returns the rule; monthly rules with the subjects ' \
+                  'of this and the next month.'
+      write true
+      input_schema(
+        'type' => 'object',
+        'properties' => { 'id' => { 'type' => 'integer', 'description' => 'Rule to change; omitted: new rule.' } }.merge(RULE_PROPERTIES),
+        'additionalProperties' => false
+      )
+
+      private
+
+      def perform(arguments)
+        rule = arguments['id'] ? TimeAutopilotRule.for_user(user).find_by(id: arguments['id']) : nil
+        raise RedmineMcpPlugin::ToolError, "Rule #{arguments['id']} not found." if arguments['id'] && rule.nil?
+
+        values = arguments.except('id', 'project')
+        values['project_id'] = arguments['project'] if arguments.key?('project')
+        editor = RedmineTimeAutopilot::RuleEditor.new(user, rule)
+        raise RedmineMcpPlugin::ToolError, editor.rule.errors.full_messages.join(' ') unless editor.save(values)
+
+        rule_payload(editor.rule.reload)
+      end
+    end
+
+    class TimeDeleteRule < Base
+      tool_name 'time_delete_rule'
+      title 'Time: delete rule'
+      description 'Time Autopilot: deletes one of the user\'s rules. Booked time stays; open drafts are assigned anew.'
+      write true
+      input_schema(
+        'type' => 'object',
+        'properties' => { 'id' => { 'type' => 'integer' } },
+        'required' => %w[id],
+        'additionalProperties' => false
+      )
+
+      private
+
+      def perform(arguments)
+        rule = TimeAutopilotRule.for_user(user).find_by(id: arguments['id'])
+        raise RedmineMcpPlugin::ToolError, "Rule #{arguments['id']} not found." unless rule
+
+        rule.destroy
+        { deleted: rule.id }
       end
     end
 
@@ -217,6 +301,6 @@ module TimeAutopilotMcp
       end
     end
 
-    ALL = [TimeWeek, TimeAnswer, TimeBook, TimeUpload, TimeRules, TimeSearchIssues].freeze
+    ALL = [TimeWeek, TimeAnswer, TimeBook, TimeUpload, TimeRules, TimeSaveRule, TimeDeleteRule, TimeSearchIssues].freeze
   end
 end

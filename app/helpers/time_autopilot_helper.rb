@@ -77,7 +77,7 @@ module TimeAutopilotHelper
       if resolution.to_create?
         l(:text_time_autopilot_reason_monthly_new, template: ta_template_label(resolution))
       else
-        l(:text_time_autopilot_reason_monthly, term: rule.subject_term)
+        l(:text_time_autopilot_reason_monthly, project: rule.project&.name.to_s)
       end
     when :rule
       case rule.kind
@@ -113,7 +113,7 @@ module TimeAutopilotHelper
     when 'skip' then content_tag(:span, l(:label_time_autopilot_target_skip), class: 'ta-to')
     when 'monthly'
       current = RedmineTimeAutopilot::MonthlyIssue.new(User.current, rule).find(User.current.today)
-      safe_join([content_tag(:span, l(:text_time_autopilot_monthly_target, term: rule.subject_term), class: 'ta-to'),
+      safe_join([content_tag(:span, l(:text_time_autopilot_monthly_target, project: rule.project&.name.to_s), class: 'ta-to'),
                  content_tag(:span, current ? " · #{l(:text_time_autopilot_now, issue: ta_issue_label(current))}" : '', class: 'ta-hint')])
     else
       rule.issue ? content_tag(:span, ta_issue_link(rule.issue), class: 'ta-to') : content_tag(:span, l(:text_time_autopilot_issue_missing), class: 'ta-to')
@@ -134,17 +134,36 @@ module TimeAutopilotHelper
       skipped: rules.select { |rule| rule.kind == 'folder' && rule.skip? } }
   end
 
-  # Vorschau für das Ticket des Monats: Vormonat, dieser und nächster Monat
+  # Vorschau für das Ticket des Monats: Vormonat, dieser und nächster Monat –
+  # Betreff aus der Vorlage und, wenn das Projekt feststeht, ob es das Ticket gibt
   def ta_monthly_preview(rule)
     finder = RedmineTimeAutopilot::MonthlyIssue.new(User.current, rule)
     today = User.current.today
     [today.prev_month, today, today.next_month].map do |date|
-      issue = finder.find(date.beginning_of_month + 14)
-      label = if issue then ta_issue_label(issue)
-              elsif rule.create_missing then l(:text_time_autopilot_will_create, subject: finder.planned_subject(date))
-              else l(:text_time_autopilot_none_yet)
-              end
-      [::I18n.l(date, format: '%B %Y'), label, issue.present?]
+      status = if rule.monthly? && rule.project && rule.subject_template.present?
+                 issue = finder.find(date.beginning_of_month + 14)
+                 if issue then l(:text_time_autopilot_exists, issue: "##{issue.id}")
+                 elsif finder.closed_for?(date) then l(:text_time_autopilot_closed_exists)
+                 elsif rule.create_missing then l(:text_time_autopilot_created_when_booking)
+                 else l(:text_time_autopilot_none_yet)
+                 end
+               end
+      { year: date.year, month: date.month, label: ::I18n.l(date, format: '%B %Y'),
+        subject: rule.subject_template.present? ? finder.planned_subject(date) : '', status: status }
     end
+  end
+
+  # Für die Vorschau im Browser: Monatsnamen je Sprache, Projektnamen
+  def ta_monthly_preview_data
+    locales = ::I18n.available_locales.map(&:to_s)
+    { months: locales.index_with { |locale| RedmineTimeAutopilot::SubjectTemplate.new('', locale: locale).month_names },
+      default_locale: Setting.default_language.presence || 'en',
+      projects: Project.allowed_to(User.current, :log_time).pluck(:id, :name).to_h }
+  end
+
+  # Sprache der Monatsnamen: Standard ist Redmines Standardsprache
+  def ta_month_locale_options
+    default = languages_options.detect { |_name, code| code.to_s == Setting.default_language.to_s }&.first || Setting.default_language
+    [[l(:text_time_autopilot_month_locale_default, language: default), '']] + languages_options
   end
 end

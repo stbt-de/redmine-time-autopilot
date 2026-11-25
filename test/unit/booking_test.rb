@@ -45,7 +45,7 @@ class BookingTest < ActiveSupport::TestCase
   end
 
   def test_fehlendes_monatsticket_wird_einmal_angelegt
-    create_rule(target: 'monthly', project: @project, subject_term: 'Wartung', create_missing: true)
+    create_rule(target: 'monthly', project: @project, subject_template: 'Wartung {month} {year}', month_locale: 'de', create_missing: true)
     create_issue(subject: 'Wartung Oktober 2026', start_date: Date.new(2026, 10, 1), due_date: Date.new(2026, 10, 31))
     create_draft(hours: 1)
     create_draft(hours: 2, spent_on: MONDAY + 2)

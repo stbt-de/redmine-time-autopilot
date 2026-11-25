@@ -19,9 +19,13 @@ Redmine::Plugin.register :redmine_time_autopilot do
   author 'stbt.de'
   author_url 'https://stbt.de/'
   description 'Time tracking for Redmine: proposals from recorded work (e.g. AI agents) with rules per folder, file, branch or word, monthly issues, quick time entry and weekly hours widgets, working hours per weekday.'
-  version '0.2.0'
+  version '0.2.1'
   url 'https://github.com/stbt-de/redmine-time-autopilot'
   requires_redmine version_or_higher: '6.0.0'
+
+  # Standard-Vorlage für den Betreff des Tickets des Monats; jede Zuordnung
+  # kann sie überschreiben
+  settings default: { 'subject_template' => '{project} - {year} - {month}' }, partial: 'settings/time_autopilot'
 
   menu :top_menu, :time_autopilot, { controller: 'time_autopilot', action: 'show' },
        caption: :label_time_autopilot, after: :my_page,
