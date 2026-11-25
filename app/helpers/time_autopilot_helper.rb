@@ -75,7 +75,12 @@ module TimeAutopilotHelper
     when :ref then l(:text_time_autopilot_reason_ref)
     when :monthly
       if resolution.to_create?
-        l(:text_time_autopilot_reason_monthly_new, template: ta_template_label(resolution))
+        template = RedmineTimeAutopilot::MonthlyIssue.new(User.current, rule).template_for(resolution.month)
+        if template
+          l(:text_time_autopilot_reason_monthly_new, template: "##{template.id}")
+        else
+          l(:text_time_autopilot_reason_monthly_new_plain)
+        end
       else
         l(:text_time_autopilot_reason_monthly, project: rule.project&.name.to_s)
       end
@@ -88,11 +93,6 @@ module TimeAutopilotHelper
       end
     else ''
     end
-  end
-
-  def ta_template_label(resolution)
-    template = RedmineTimeAutopilot::MonthlyIssue.new(User.current, resolution.rule).template_for(resolution.month)
-    template ? "##{template.id}" : l(:text_time_autopilot_no_template)
   end
 
   # „wenn …“-Teil einer Zuordnung

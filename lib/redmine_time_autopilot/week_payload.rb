@@ -16,11 +16,21 @@ module RedmineTimeAutopilot
         sources: @week.sources.map { |source| { name: source.name, segments: source.segments, folders: source.folders, uploaded_at: source.uploaded_at } },
         days: @week.days.map { |day| { date: day.date, logged: day.logged_hours, proposed: day.ready_hours.to_f, target: day.target, questions: day.question_count } },
         questions: @week.questions.map { |question| question_json(question) },
-        proposals: @week.entries.map { |entry| proposal_json(entry) }
+        proposals: @week.entries.map { |entry| proposal_json(entry) },
+        # Schon gebucht – damit ein Agent Doppelbuchungen erkennt
+        booked: @week.time_entries.sort_by { |entry| [entry.spent_on, entry.id] }.map { |entry| booked_json(entry) }
       }
     end
 
     private
+
+    def booked_json(entry)
+      {
+        id: entry.id, date: entry.spent_on, hours: entry.hours.to_f,
+        issue: entry.issue && { id: entry.issue.id, subject: entry.issue.subject },
+        project: entry.project&.name, activity: entry.activity&.name, comments: entry.comments
+      }
+    end
 
     def question_json(question)
       {

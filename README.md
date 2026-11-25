@@ -112,7 +112,7 @@ Redmine's permissions:
 
 | | |
 | --- | --- |
-| `GET /time_autopilot.json?week=YYYY-MM-DD` | the week: questions, proposals with `key`, totals |
+| `GET /time_autopilot.json?week=YYYY-MM-DD` | the week: questions, proposals with `key`, totals, entries already booked |
 | `POST /time_autopilot/answer.json?week=…` | `{"folder": "shop", "issue_id": 45, "remember": true}` or `{"folder": "private", "skip": true}` |
 | `POST /time_autopilot/book.json?week=…` | `{"hours": {"<key>": 1.5}, "keys": ["<key>"]}` – both optional |
 | `POST /time_autopilot/drafts.json` | upload drafts (see above) |

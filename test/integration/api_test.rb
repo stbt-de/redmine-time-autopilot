@@ -36,6 +36,27 @@ class ApiTest < Redmine::IntegrationTest
     assert_equal ['Claude Code', I18n.t(:label_time_autopilot_unknown_source)].sort, body['sources'].map { |source| source['name'] }.sort
   end
 
+  # Schon gebuchte Zeit steht mit Ticket und Kommentar in der Woche – sonst
+  # sieht ein Agent nur Tagessummen und kann Doppelbuchungen nicht erkennen
+  def test_woche_zeigt_gebuchte_eintraege
+    issue = create_issue(subject: 'Wartung')
+    create_time_entry(@jsmith, issue, hours: 2.5, spent_on: MONDAY + 1)
+    get "/time_autopilot.json?week=#{MONDAY.iso8601}", headers: headers
+    booked = response.parsed_body['booked'].sole
+    assert_equal [(MONDAY + 1).iso8601, 2.5, issue.id, 'Wartung'],
+                 [booked['date'], booked['hours'], booked['issue']['id'], booked['issue']['subject']]
+  end
+
+  # Regression: ohne Vorlage hieß es „wird beim Buchen aus ohne Vorlage angelegt“
+  def test_grund_fuer_neues_monatsticket_ohne_vorlage
+    create_rule(target: 'monthly', project: @project, subject_template: 'Betrieb {year} - {month}', month_locale: 'de')
+    create_draft(hours: 1)
+    get "/time_autopilot.json?week=#{MONDAY.iso8601}", headers: headers
+    reason = response.parsed_body['proposals'].sole['reason']
+    assert_equal I18n.t(:text_time_autopilot_reason_monthly_new_plain, locale: @jsmith.language.presence || Setting.default_language), reason
+    assert_not_includes reason, '%{'
+  end
+
   def test_frage_beantworten_und_buchen
     issue = create_issue(subject: 'Kampagnen-Monitor')
     create_draft(folder: 'monitor', hours: 2, summary: 'Deploy')
