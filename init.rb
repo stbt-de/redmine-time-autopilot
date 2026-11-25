@@ -19,7 +19,7 @@ Redmine::Plugin.register :redmine_time_autopilot do
   author 'stbt.de'
   author_url 'https://stbt.de/'
   description 'Time tracking for Redmine: proposals from recorded work (e.g. AI agents) with rules per folder, file, branch or word, monthly issues, quick time entry and weekly hours widgets, working hours per weekday.'
-  version '0.1.0'
+  version '0.2.0'
   url 'https://github.com/stbt-de/redmine-time-autopilot'
   requires_redmine version_or_higher: '6.0.0'
 
@@ -42,3 +42,7 @@ UsersController.include(RedmineTimeAutopilot::WorkHoursPatch::Users) unless User
 { 'my_week' => 5 }.each do |name, max|
   Redmine::MyPage.additional_blocks[name]&.merge!(max_occurs: max)
 end
+
+# Werkzeuge für den MCP-Server von redmine_mcp_plugin (nur wenn installiert)
+require File.expand_path('mcp/registration', __dir__)
+TimeAutopilotMcp::Registration.install

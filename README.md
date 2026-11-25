@@ -109,18 +109,19 @@ Redmine's permissions:
 | `GET /time_autopilot/rules.json` | rules as sentences, folders without a rule |
 | `GET /time_autopilot/issues.json?term=…` | open issues by number or subject |
 
-`mcp/` contains an MCP server wrapping these endpoints (tools `time_week`, `time_answer`,
-`time_book`, `time_upload`, `time_rules`, `time_search_issues`), so an agent can show the
-week in a chat, take the answers and book after an explicit okay:
+**MCP:** with [redmine_mcp_plugin](https://github.com/joaoperfig/redmine_mcp_plugin)
+(Redmine 6.1 or later) installed, Time Autopilot adds its tools to that plugin's MCP
+endpoint: `time_week`, `time_answer`, `time_book`, `time_upload`, `time_rules`,
+`time_search_issues`. No second MCP server and no second key – they run as the signed-in
+user, need *Log spent time*, and follow the MCP plugin's OAuth scopes. The writing tools
+(`time_answer`, `time_book`, `time_upload`) only appear when the MCP plugin is not in
+read-only mode; `time_book` is described so that agents only call it after an explicit
+okay. An agent can then show the week in a chat, take the answers and book.
 
-```bash
-cd mcp && npm install
-claude mcp add redmine-time-autopilot -s user \
-  -e REDMINE_URL=https://redmine.example.com -e REDMINE_API_KEY=<your key> \
-  -- node /path/to/redmine_time_autopilot/mcp/server.mjs
-```
-
-`REDMINE_URL=… REDMINE_API_KEY=… node mcp/smoke.mjs` checks the connection (read only).
+redmine_mcp_plugin has no official way yet for other plugins to add tools; Time
+Autopilot appends them to its tool list (and switches to an official `register` method
+as soon as there is one). Tested with the version pinned in `dev/run-tests.sh`
+(`WITH_MCP=1 dev/run-tests.sh`).
 
 ## Installation
 
@@ -145,7 +146,8 @@ The interface is available in English and German.
 ## Development
 
 `dev/run-tests.sh` runs the tests against a fresh Redmine 7.0 in Docker,
-`REDMINE_VERSION=6.0 dev/run-tests.sh` against 6.0.
+`REDMINE_VERSION=6.0 dev/run-tests.sh` against 6.0, `WITH_MCP=1 dev/run-tests.sh` together
+with redmine_mcp_plugin (MCP tools).
 
 ## Built with AI assistance
 

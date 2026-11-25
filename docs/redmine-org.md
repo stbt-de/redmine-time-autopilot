@@ -19,7 +19,7 @@ Time tracking for Redmine with proposals from recorded work – e.g. from AI cod
 * Rules as sentences: work in a folder goes to an issue, to the issue of the month (e.g. monthly maintenance, created from the previous month when missing) or is not booked; exceptions by files, branch or word. Issue numbers in the work always win.
 * Working hours per weekday under *My account*; daily and weekly targets.
 * Blocks for *My page*: *Log time* and *Weekly hours* (formerly in Dashboard Blocks).
-* REST API and an MCP server, so agents can show the week in a chat and book after an explicit okay.
+* REST API, and tools for the MCP endpoint of "redmine_mcp_plugin":https://github.com/joaoperfig/redmine_mcp_plugin, so agents can show the week in a chat and book after an explicit okay.
 
 Bookings are regular Redmine time entries with Redmine's permissions. Styled for the "Klar theme":https://github.com/stbt-de/redmine-klar-theme. English and German.
 
@@ -45,7 +45,7 @@ Restart Redmine. Coming from Dashboard Blocks 1.3: install Time Autopilot, then 
 
 ## Plugin version
 
-0.1.0
+0.2.0
 
 ## Redmine compatibility
 
