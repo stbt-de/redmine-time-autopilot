@@ -64,7 +64,10 @@
       </div>
 
       <div class="ta-field ta-submit">
-        <%= submit_tag l(:button_time_autopilot_log), name: nil, class: 'button-positive' %>
+        <%# Ohne data-disable-with: rails-ujs sperrt den Knopf sonst beim Absenden und gibt ihn
+            nie wieder frei, weil das Skript das Absenden selbst übernimmt %>
+        <%= submit_tag l(:button_time_autopilot_log), name: nil, class: 'button-positive',
+                       data: { disable_with: false } %>
       </div>
     <% end %>
 

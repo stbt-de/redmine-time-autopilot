@@ -28,6 +28,15 @@ class WidgetsTest < Redmine::IntegrationTest
     assert_select 'link[href*="time_autopilot_blocks"]'
   end
 
+  # rails-ujs sperrt Knöpfe mit data-disable-with beim Absenden; das Skript des
+  # Blocks bucht selbst, der Knopf bliebe nach „kein Ticket gewählt“ gesperrt
+  def test_buchen_knopf_wird_nicht_von_rails_ujs_gesperrt
+    my_page_blocks(@user, :quick_time_entry)
+    get '/my/page'
+    assert_select '#block-quick_time_entry .ta-submit input[type=submit]'
+    assert_select '#block-quick_time_entry .ta-submit input[data-disable-with]', false
+  end
+
   def test_wochenziel_einstellen
     my_page_blocks(@user, :my_week)
     post '/my/page', params: { settings: { my_week: { target_hours: '32' } } }, xhr: true
