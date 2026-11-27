@@ -45,7 +45,7 @@ Restart Redmine. Coming from Dashboard Blocks 1.3: install Time Autopilot, then 
 
 ## Plugin version
 
-0.2.3
+0.2.4
 
 ## Redmine compatibility
 

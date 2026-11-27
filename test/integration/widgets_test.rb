@@ -37,6 +37,17 @@ class WidgetsTest < Redmine::IntegrationTest
     assert_select '#block-quick_time_entry .ta-submit input[data-disable-with]', false
   end
 
+  # Vorgaben und eigene Dauer: gebucht wird das versteckte Feld, das Eingabefeld
+  # daneben ist leer und trägt keinen Namen (sonst kämen zwei Werte für hours an)
+  def test_eigene_dauer_ist_ein_eigenes_leeres_feld
+    my_page_blocks(@user, :quick_time_entry)
+    get '/my/page'
+    assert_select '#block-quick_time_entry input[type=hidden][name=hours].ta-hours'
+    assert_select '#block-quick_time_entry .ta-duration-presets .ta-duration-choice', 4
+    assert_select '#block-quick_time_entry .ta-duration-choice[aria-pressed=true]', 1
+    assert_select '#block-quick_time_entry input.ta-hours-custom[placeholder]:not([name]):not([value])'
+  end
+
   def test_wochenziel_einstellen
     my_page_blocks(@user, :my_week)
     post '/my/page', params: { settings: { my_week: { target_hours: '32' } } }, xhr: true
@@ -151,6 +162,17 @@ class WidgetsTest < Redmine::IntegrationTest
     assert_in_delta 1.5, entry.hours
     assert_equal [issue, @user, 'Schnell gebucht'], [entry.issue, entry.user, entry.comments]
     assert response.parsed_body['undo']
+  end
+
+  # Die Meldung nennt das Ticket; Nummer und Adresse kommen mit, damit das
+  # Skript die Nummer verlinken kann
+  def test_buchen_liefert_ticketnummer_und_adresse
+    issue = create_assigned_issue(@user)
+    post '/time_autopilot/entries', params: { issue_id: issue.id, hours: '1', spent_on: @user.today.to_s }
+    assert_response :success
+    body = response.parsed_body
+    assert_equal({ 'label' => "##{issue.id}", 'url' => "/issues/#{issue.id}" }, body['issue'])
+    assert_includes body['message'], "##{issue.id}"
   end
 
   def test_buchen_ohne_recht_verboten

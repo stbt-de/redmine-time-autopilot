@@ -141,6 +141,8 @@ en:
   text_time_autopilot_work_hours: The weekly target is the sum. Days with 0 count as days off. Applies to everyone viewing this week.
   text_time_autopilot_work_hours_fixed: "The weekly target follows the working hours of %{name}. Only %{name} and administrators can change them."
   date_format_time_autopilot_day: "%b %-d"
+  label_time_autopilot_other_duration: Other
+  label_time_autopilot_other_duration_hint: "Other duration, e.g. 1:45 or 0.75"
   button_time_autopilot_log: Log
   button_time_autopilot_undo: Undo
   button_time_autopilot_clear: Clear selection

@@ -141,6 +141,8 @@ de:
   text_time_autopilot_work_hours: Das Wochenziel ist die Summe. Tage mit 0 gelten als frei. Gilt für alle, die diese Woche ansehen.
   text_time_autopilot_work_hours_fixed: "Das Wochenziel folgt der Arbeitszeit von %{name}. Ändern können das %{name} selbst und Admins."
   date_format_time_autopilot_day: "%d.%m."
+  label_time_autopilot_other_duration: Andere
+  label_time_autopilot_other_duration_hint: "Andere Dauer, z. B. 1:45 oder 0,75"
   button_time_autopilot_log: Buchen
   button_time_autopilot_undo: Rückgängig
   button_time_autopilot_clear: Auswahl entfernen

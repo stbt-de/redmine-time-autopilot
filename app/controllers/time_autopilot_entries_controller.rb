@@ -32,6 +32,8 @@ class TimeAutopilotEntriesController < ApplicationController
       render json: {
         id: entry.id,
         message: l(:notice_time_autopilot_time_logged, hours: hours_text(entry.hours), issue: "##{@issue.id} #{@issue.subject}"),
+        # Das Skript verlinkt die Nummer in der Meldung auf das Ticket
+        issue: { label: "##{@issue.id}", url: issue_path(@issue) },
         today: hours_text(quick_time_entry.today_hours),
         undo: entry.editable_by?(User.current)
       }

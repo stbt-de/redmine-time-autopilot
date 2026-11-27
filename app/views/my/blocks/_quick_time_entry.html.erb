@@ -35,13 +35,20 @@
 
       <fieldset class="ta-field ta-duration">
         <legend><%= l(:field_hours) %></legend>
+        <%# Gebucht wird der Wert dieses Felds: die gewählte Vorgabe oder die eigene Dauer %>
+        <%= hidden_field_tag :hours, format_hours(1), id: "#{block}-hours", class: 'ta-hours' %>
         <div class="ta-duration-choices">
-          <% [0.25, 0.5, 1, 2].each do |hours| %>
-            <button type="button" class="ta-duration-choice" data-hours="<%= format_hours(hours) %>"
-                    aria-pressed="<%= hours == 1 %>"><%= format_hours(hours) %></button>
-          <% end %>
-          <%= text_field_tag :hours, format_hours(1), id: "#{block}-hours", class: 'ta-hours',
-                             size: 5, inputmode: 'decimal', 'aria-label': l(:field_hours), required: true %>
+          <div class="ta-duration-presets">
+            <% [0.25, 0.5, 1, 2].each do |hours| %>
+              <button type="button" class="ta-duration-choice" data-hours="<%= format_hours(hours) %>"
+                      aria-pressed="<%= hours == 1 %>"><%= format_hours(hours) %></button>
+            <% end %>
+          </div>
+          <%# Eigene Dauer: leer, solange eine Vorgabe gewählt ist %>
+          <input type="text" id="<%= block %>-hours-custom" class="ta-hours-custom" size="6" inputmode="decimal"
+                 placeholder="<%= l(:label_time_autopilot_other_duration) %>"
+                 aria-label="<%= l(:label_time_autopilot_other_duration_hint) %>"
+                 title="<%= l(:label_time_autopilot_other_duration_hint) %>">
         </div>
       </fieldset>
 

@@ -36,6 +36,7 @@
       clear: root.querySelector('.ta-issue-clear'),
       options: root.querySelector('.ta-issue-options'),
       hours: root.querySelector('.ta-hours'),
+      customHours: root.querySelector('.ta-hours-custom'),
       activity: root.querySelector('.ta-activity'),
       comments: root.querySelector('input[name="comments"]'),
       status: root.querySelector('.ta-quick-time-status')
@@ -201,11 +202,21 @@
 
   // --- Dauer -----------------------------------------------------------------
 
+  // Gebucht wird das versteckte Feld: die eigene Dauer, sonst die gewählte Vorgabe.
+  // Eine Vorgabe ist nur markiert, solange das Feld für die eigene Dauer leer ist.
   function markDuration(root) {
     var p = parts(root);
+    var custom = p.customHours.value.trim();
+    p.hours.value = custom || root.dataset.taPreset || p.hours.defaultValue;
     root.querySelectorAll('.ta-duration-choice').forEach(function (button) {
-      button.setAttribute('aria-pressed', button.dataset.hours === p.hours.value.trim() ? 'true' : 'false');
+      button.setAttribute('aria-pressed', !custom && button.dataset.hours === p.hours.value ? 'true' : 'false');
     });
+  }
+
+  function choosePreset(root, hours) {
+    root.dataset.taPreset = hours;
+    parts(root).customHours.value = '';
+    markDuration(root);
   }
 
   // --- Meldungen und Buchen --------------------------------------------------
@@ -217,13 +228,28 @@
     status.className = 'ta-quick-time-status';
   }
 
-  function showStatus(root, kind, text, action) {
+  // Meldung als Text; steht die Ticketnummer (issue.label) darin, wird sie zum Link
+  function messageNode(text, issue) {
+    var message = document.createElement('span');
+    var at = issue && issue.label ? text.indexOf(issue.label) : -1;
+    if (at < 0) {
+      message.textContent = text;
+      return message;
+    }
+    var link = document.createElement('a');
+    link.href = issue.url;
+    link.textContent = issue.label;
+    message.appendChild(document.createTextNode(text.slice(0, at)));
+    message.appendChild(link);
+    message.appendChild(document.createTextNode(text.slice(at + issue.label.length)));
+    return message;
+  }
+
+  function showStatus(root, kind, text, action, issue) {
     var status = parts(root).status;
     status.innerHTML = '';
     status.className = 'ta-quick-time-status ta-status-' + kind;
-    var message = document.createElement('span');
-    message.textContent = text;
-    status.appendChild(message);
+    status.appendChild(messageNode(text, issue));
     if (action) {
       status.appendChild(action);
     }
@@ -273,7 +299,8 @@
       .then(function (result) {
         if (result.ok) {
           updateToday(root, result.body.today);
-          showStatus(root, 'success', result.body.message, result.body.undo ? undoButton(root, result.body.id) : null);
+          showStatus(root, 'success', result.body.message,
+                     result.body.undo ? undoButton(root, result.body.id) : null, result.body.issue);
           clearIssue(root);
           p.search.value = '';
           p.comments.value = '';
@@ -305,7 +332,7 @@
     if (event.target.matches('.ta-issue-search')) {
       clearIssue(root);
       search(root);
-    } else if (event.target.matches('.ta-hours')) {
+    } else if (event.target.matches('.ta-hours-custom')) {
       markDuration(root);
     }
   });
@@ -355,8 +382,7 @@
     } else if (recent) {
       selectIssue(root, recent.dataset.issueId, recent.dataset.label);
     } else if (duration) {
-      parts(root).hours.value = duration.dataset.hours;
-      markDuration(root);
+      choosePreset(root, duration.dataset.hours);
     } else if (event.target.closest('.ta-issue-clear')) {
       var p = parts(root);
       clearIssue(root);

@@ -118,7 +118,11 @@ input[type=search].ta-search, input[type=search].ta-issue-search { -webkit-appea
 .ta-side-entry .ta-quick-time-intro { color: #585858; font-size: 0.92em; margin: 0 0 12px; }
 .ta-side .ta-quick-time-form { flex-direction: column; align-items: stretch; }
 .ta-side .ta-field { flex: none; }
-.ta-side .ta-duration-choices { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)) 4.5em; }
+/* schmale Spalte: Vorgaben teilen sich die Breite, daneben das Feld für die eigene Dauer */
+.ta-side .ta-duration-choices { flex-wrap: nowrap; gap: 8px; }
+.ta-side .ta-duration-presets { flex: 1; min-width: 0; }
+.ta-side .ta-duration-choice { flex: 1; min-width: 0; padding-right: 4px; padding-left: 4px; }
+.ta-side .ta-hours-custom { flex: 0 0 5em; width: 5em; min-width: 0; }
 .ta-side .ta-submit input { width: 100%; }
 .ta-side .ta-recent { flex-direction: column; align-items: stretch; }
 .ta-side .ta-recent-issue { box-sizing: border-box; width: 100%; max-width: 100%; min-width: 0; justify-content: flex-start; }

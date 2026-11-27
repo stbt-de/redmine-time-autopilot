@@ -426,13 +426,41 @@ h3:has(> .ta-mw-total, > .ta-today) {
 .ta-duration-choices {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 10px;
+}
+
+/* Vorgaben als ein zusammenhängender Schalter – so hebt sich das Feld für die
+   eigene Dauer daneben als Eingabe ab */
+.ta-duration-presets {
+  display: flex;
 }
 
 .ta-duration-choice {
+  position: relative;
   min-width: 48px;
+  margin: 0;
   font-variant-numeric: tabular-nums;
   cursor: pointer;
+  border-radius: 0;
+}
+
+.ta-duration-choice + .ta-duration-choice {
+  margin-left: -1px;
+}
+
+.ta-duration-choice:first-child {
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+}
+
+.ta-duration-choice:last-child {
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+}
+
+/* über den Nachbarn, damit deren Rahmen die Markierung nicht anschneidet */
+.ta-duration-choice[aria-pressed="true"], .ta-duration-choice:focus-visible {
+  z-index: 1;
 }
 
 .ta-duration-choice[aria-pressed="true"] {
@@ -441,10 +469,13 @@ h3:has(> .ta-mw-total, > .ta-today) {
   border-color: var(--ta-accent);
 }
 
-.ta-hours {
-  width: 4.5em;
-  text-align: center;
+.ta-hours-custom {
+  width: 6em;
   font-variant-numeric: tabular-nums;
+}
+
+.ta-hours-custom::placeholder {
+  color: var(--ta-muted);
 }
 
 .ta-quick-time-status {
@@ -486,6 +517,7 @@ h3:has(> .ta-mw-total, > .ta-today) {
 .ta-quick-time-status a {
   color: inherit;
   font-weight: 600;
+  text-decoration: underline;
 }
 
 .ta-recent {
@@ -537,11 +569,29 @@ h3:has(> .ta-mw-total, > .ta-today) {
   }
 
   .ta-duration-choices {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr)) 5em;
+    flex-wrap: nowrap;
   }
 
-  .ta-duration-choice, .ta-hours {
+  .ta-duration-presets {
+    flex: 1;
+    min-width: 0;
+  }
+
+  /* schmale Innenabstände: die Zeile darf das Formular nicht breiter machen */
+  .ta-duration-choice {
+    flex: 1;
+    min-width: 0;
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+
+  .ta-hours-custom {
+    flex: 0 0 5em;
+    width: 5em;
+    min-width: 0;
+  }
+
+  .ta-duration-choice, .ta-hours-custom {
     min-height: 44px;
   }
 
